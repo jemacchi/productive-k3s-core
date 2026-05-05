@@ -1,0 +1,97 @@
+{% extends "main.html" %}
+
+{% block tabs %}
+  <section class="pk3s-hero">
+    <div class="pk3s-container pk3s-hero-grid">
+      <div class="pk3s-hero-copy">
+        <div class="pk3s-eyebrow">{{ page.meta.eyebrow }}</div>
+        <h1>{{ page.meta.hero_title }}</h1>
+        <p class="pk3s-lead">{{ page.meta.lead }}</p>
+        <p class="pk3s-sublead">{{ page.meta.sublead }}</p>
+        <div class="pk3s-actions">
+          <a class="md-button md-button--primary" href="{{ page.meta.primary_url }}">{{ page.meta.primary_label }}</a>
+          <a class="md-button" href="{{ page.meta.secondary_url }}">{{ page.meta.secondary_label }}</a>
+        </div>
+      </div>
+      <aside class="pk3s-card pk3s-hero-card">
+        <h2>{{ page.meta.card_title }}</h2>
+        <ul>
+          {% for item in page.meta.card_items %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </aside>
+    </div>
+  </section>
+{% endblock %}
+
+{% block container %}
+  <div class="md-content pk3s-home-shell" data-md-component="content">
+    <article class="md-content__inner md-typeset pk3s-home">
+      <section class="pk3s-home-section">
+        <h2>{{ page.meta.why_title }}</h2>
+        <div class="pk3s-option-grid">
+          {% set left_option = page.meta.why_options[0] %}
+          {% set right_option = page.meta.why_options[1] %}
+          <article class="pk3s-card pk3s-option-card">
+            <div class="pk3s-option-label">{{ left_option.label }}</div>
+            <p>{{ left_option.text }}</p>
+          </article>
+          <div class="pk3s-gap-divider" aria-hidden="true">
+            <span class="pk3s-gap-divider__horizontal">↔</span>
+            <span class="pk3s-gap-divider__vertical">↕</span>
+          </div>
+          <article class="pk3s-card pk3s-option-card">
+            <div class="pk3s-option-label">{{ right_option.label }}</div>
+            <p>{{ right_option.text }}</p>
+          </article>
+        </div>
+        <p class="pk3s-bridge-note">{{ page.meta.bridge_note }}</p>
+        <div class="pk3s-pill-grid">
+          {% for item in page.meta.bridge_points %}
+          <div class="pk3s-pill">{{ item }}</div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="pk3s-home-section pk3s-two-col">
+        <article class="pk3s-card">
+          <h2>{{ page.meta.use_cases_title }}</h2>
+          <ul>
+            {% for item in page.meta.use_cases %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+        <article class="pk3s-card">
+          <h2>{{ page.meta.principles_title }}</h2>
+          <ul>
+            {% for item in page.meta.principles %}
+            <li><strong>{{ item.title }}</strong>: {{ item.text }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+      </section>
+
+      <section class="pk3s-home-section pk3s-two-col">
+        <article class="pk3s-card">
+          <h2>{{ page.meta.environments_title }}</h2>
+          <ul>
+            {% for item in page.meta.environments %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+        </article>
+        <article class="pk3s-card">
+          <h2>{{ page.meta.not_title }}</h2>
+          <ul>
+            {% for item in page.meta.not_items %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+          <p class="pk3s-card-note"><strong>{{ page.meta.not_note }}</strong></p>
+        </article>
+      </section>
+    </article>
+  </div>
+{% endblock %}
