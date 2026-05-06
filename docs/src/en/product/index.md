@@ -9,3 +9,4 @@ In the pages below you can see how it is used, why it exists, and which platform
 - [How to use Productive K3S](how-to-use.md)
 - [Reasons behind the stack](reasons-behind.md)
 - [Supported platforms](supported-platforms.md)
+- [Relationship with Productive K3S Infra](productive-k3s-infra-relationship.md)

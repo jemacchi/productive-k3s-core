@@ -230,9 +230,9 @@ Un cambio se considera validado cuando:
 ## Documentación relacionada
 
 - [Resumen de guías](index.md)
-- [Verificaciones de k3s](../reference/k3s-checks.md)
-- [Verificaciones de ingress](../reference/ingress-checks.md)
-- [Verificaciones de Rancher](../reference/rancher-checks.md)
-- [Verificaciones del registry](../reference/registry-checks.md)
-- [Verificaciones de Longhorn](../reference/longhorn-checks.md)
-- [Verificaciones de certificados](../reference/certificate-checks.md)
+- [Verificaciones de k3s](../../user-docs/k3s-checks.md)
+- [Verificaciones de ingress](../../user-docs/ingress-checks.md)
+- [Verificaciones de Rancher](../../user-docs/rancher-checks.md)
+- [Verificaciones del registry](../../user-docs/registry-checks.md)
+- [Verificaciones de Longhorn](../../user-docs/longhorn-checks.md)
+- [Verificaciones de certificados](../../user-docs/certificate-checks.md)

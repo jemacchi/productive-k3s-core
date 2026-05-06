@@ -6,15 +6,15 @@ Usá este árbol cuando quieras leer la guía del repositorio, las referencias o
 
 ## Empezar por acá
 
-- [Resumen del producto](overview/index.md)
-- [Documentación para usuarios](reference/index.md)
-- [Documentación para contribuidores](contributor/index.md)
+- [Resumen del producto](product/index.md)
+- [Documentación para usuarios](user-docs/index.md)
+- [Documentación para desarrolladores](developer-docs/index.md)
 
 ## Enlaces directos
 
-- [Razones del diseño](overview/reasons-behind.md)
-- [Plataformas soportadas](overview/supported-platforms.md)
-- [Desarrollo en macOS](guides/macos-development.md)
-- [Desarrollo en Windows](guides/windows-development.md)
-- [Pruebas después de cambios](guides/post-development-testing.md)
-- [Privacidad y telemetría](reference/privacy-and-telemetry.md)
+- [Razones del diseño](product/reasons-behind.md)
+- [Plataformas soportadas](product/supported-platforms.md)
+- [Desarrollo en macOS](developer-docs/guides/macos-development.md)
+- [Desarrollo en Windows](developer-docs/guides/windows-development.md)
+- [Pruebas después de cambios](developer-docs/guides/post-development-testing.md)
+- [Privacidad y telemetría](user-docs/privacy-and-telemetry.md)

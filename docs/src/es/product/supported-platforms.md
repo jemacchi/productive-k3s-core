@@ -59,8 +59,8 @@ Recomendado para una experiencia más fluida:
 
 ## Ver también
 
-- [Baseline soportado para Ubuntu 22.04](../contributor/ubuntu-22-04-supported.md)
-- [Baseline soportado para Ubuntu 24.04](../contributor/ubuntu-24-04-supported.md)
-- [Baseline soportado para Debian 12](../contributor/debian-12-supported.md)
-- [Baseline soportado para Debian 13](../contributor/debian-13-supported.md)
-- [Pruebas después de cambios](../guides/post-development-testing.md)
+- [Baseline soportado para Ubuntu 22.04](../developer-docs/ubuntu-22-04-supported.md)
+- [Baseline soportado para Ubuntu 24.04](../developer-docs/ubuntu-24-04-supported.md)
+- [Baseline soportado para Debian 12](../developer-docs/debian-12-supported.md)
+- [Baseline soportado para Debian 13](../developer-docs/debian-13-supported.md)
+- [Pruebas después de cambios](../developer-docs/guides/post-development-testing.md)

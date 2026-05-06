@@ -9,3 +9,4 @@ En las páginas de abajo podés ver cómo se usa, por qué existe y qué platafo
 - [Cómo usar Productive K3S](how-to-use.md)
 - [Razones del diseño](reasons-behind.md)
 - [Plataformas soportadas](supported-platforms.md)
+- [Relación con Productive K3S Infra](productive-k3s-infra-relationship.md)

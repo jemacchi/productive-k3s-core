@@ -6,30 +6,28 @@
 {% if is_es %}
   {% set tabs = [
     {"label": "Inicio", "url": home_root ~ "?lang=es", "key": "home"},
-    {"label": "Producto", "url": "es/overview/", "key": "overview"},
-    {"label": "Documentación para usuarios", "url": "es/reference/", "key": "reference"},
-    {"label": "Documentación para contribuidores", "url": "es/contributor/", "key": "contributor"},
+    {"label": "Producto", "url": "es/product/", "key": "product"},
+    {"label": "Documentación para usuarios", "url": "es/user-docs/", "key": "user-docs"},
+    {"label": "Documentación para desarrolladores", "url": "es/developer-docs/", "key": "developer-docs"},
   ] %}
 {% else %}
   {% set tabs = [
     {"label": "Home", "url": home_root, "key": "home"},
-    {"label": "Product", "url": "en/overview/", "key": "overview"},
-    {"label": "User Docs", "url": "en/reference/", "key": "reference"},
-    {"label": "Contributor Docs", "url": "en/contributor/", "key": "contributor"},
+    {"label": "Product", "url": "en/product/", "key": "product"},
+    {"label": "User Docs", "url": "en/user-docs/", "key": "user-docs"},
+    {"label": "Developer Docs", "url": "en/developer-docs/", "key": "developer-docs"},
   ] %}
 {% endif %}
 
 {% if page and page.url %}
   {% if page.url in ['en/', 'es/'] %}
     {% set current_key = 'home' %}
-  {% elif '/overview/' in page.url %}
-    {% set current_key = 'overview' %}
-  {% elif '/guides/' in page.url %}
-    {% set current_key = 'contributor' %}
-  {% elif '/reference/' in page.url %}
-    {% set current_key = 'reference' %}
-  {% elif '/contributor/' in page.url %}
-    {% set current_key = 'contributor' %}
+  {% elif '/product/' in page.url %}
+    {% set current_key = 'product' %}
+  {% elif '/developer-docs/' in page.url %}
+    {% set current_key = 'developer-docs' %}
+  {% elif '/user-docs/' in page.url %}
+    {% set current_key = 'user-docs' %}
   {% else %}
     {% set current_key = 'home' %}
   {% endif %}

@@ -64,65 +64,73 @@ nav:
   - English:
       - Home: en/index.md
       - Product:
-          - en/overview/index.md
-          - How to use: en/overview/how-to-use.md
-          - Reasons behind: en/overview/reasons-behind.md
-          - Supported platforms: en/overview/supported-platforms.md
+          - en/product/index.md
+          - How to use: en/product/how-to-use.md
+          - Reasons behind: en/product/reasons-behind.md
+          - Supported platforms: en/product/supported-platforms.md
+          - Relationship with Productive K3S Infra: en/product/productive-k3s-infra-relationship.md
       - User docs:
-          - en/reference/index.md
+          - en/user-docs/index.md
           - Checks:
-              - K3s: en/reference/k3s-checks.md
-              - Ingress: en/reference/ingress-checks.md
-              - Rancher: en/reference/rancher-checks.md
-              - Registry: en/reference/registry-checks.md
-              - Longhorn: en/reference/longhorn-checks.md
-              - Certificates: en/reference/certificate-checks.md
-          - Longhorn single-node notes: en/reference/longhorn-single-node-notes.md
-          - Privacy and telemetry: en/reference/privacy-and-telemetry.md
-      - Contributor docs:
-          - en/contributor/index.md
+              - K3s: en/user-docs/k3s-checks.md
+              - Ingress: en/user-docs/ingress-checks.md
+              - Rancher: en/user-docs/rancher-checks.md
+              - Registry: en/user-docs/registry-checks.md
+              - Longhorn: en/user-docs/longhorn-checks.md
+              - Certificates: en/user-docs/certificate-checks.md
+          - Longhorn single-node notes: en/user-docs/longhorn-single-node-notes.md
+          - Privacy and telemetry: en/user-docs/privacy-and-telemetry.md
+      - Developer docs:
+          - en/developer-docs/index.md
+          - Make targets: en/developer-docs/make-targets.md
+          - Productive K3S modes: en/developer-docs/productive-k3s-modes.md
+          - Scripts parameters: en/developer-docs/script-parameters.md
           - Guides:
-              - en/guides/index.md
-              - macOS development: en/guides/macos-development.md
-              - Post-development testing: en/guides/post-development-testing.md
-              - Windows development: en/guides/windows-development.md
-          - GitHub Actions and releases: en/contributor/github-actions.md
+              - en/developer-docs/guides/index.md
+              - macOS development: en/developer-docs/guides/macos-development.md
+              - Post-development testing: en/developer-docs/guides/post-development-testing.md
+              - Windows development: en/developer-docs/guides/windows-development.md
+          - GitHub Actions and releases: en/developer-docs/github-actions.md
           - Support baseline:
-              - Ubuntu 22.04: en/contributor/ubuntu-22-04-supported.md
-              - Ubuntu 24.04: en/contributor/ubuntu-24-04-supported.md
-              - Debian 12: en/contributor/debian-12-supported.md
-              - Debian 13: en/contributor/debian-13-supported.md
+              - Ubuntu 22.04: en/developer-docs/ubuntu-22-04-supported.md
+              - Ubuntu 24.04: en/developer-docs/ubuntu-24-04-supported.md
+              - Debian 12: en/developer-docs/debian-12-supported.md
+              - Debian 13: en/developer-docs/debian-13-supported.md
   - Español:
       - Inicio: es/index.md
       - Producto:
-          - es/overview/index.md
-          - Cómo usar: es/overview/how-to-use.md
-          - Razones del diseño: es/overview/reasons-behind.md
-          - Plataformas soportadas: es/overview/supported-platforms.md
+          - es/product/index.md
+          - Cómo usar: es/product/how-to-use.md
+          - Razones del diseño: es/product/reasons-behind.md
+          - Plataformas soportadas: es/product/supported-platforms.md
+          - Relación con Productive K3S Infra: es/product/productive-k3s-infra-relationship.md
       - Documentación para usuarios:
-          - es/reference/index.md
+          - es/user-docs/index.md
           - Verificaciones:
-              - K3s: es/reference/k3s-checks.md
-              - Ingress: es/reference/ingress-checks.md
-              - Rancher: es/reference/rancher-checks.md
-              - Registry: es/reference/registry-checks.md
-              - Longhorn: es/reference/longhorn-checks.md
-              - Certificados: es/reference/certificate-checks.md
-          - Notas de Longhorn para nodo único: es/reference/longhorn-single-node-notes.md
-          - Privacidad y telemetría: es/reference/privacy-and-telemetry.md
-      - Documentación para contribuidores:
-          - es/contributor/index.md
+              - K3s: es/user-docs/k3s-checks.md
+              - Ingress: es/user-docs/ingress-checks.md
+              - Rancher: es/user-docs/rancher-checks.md
+              - Registry: es/user-docs/registry-checks.md
+              - Longhorn: es/user-docs/longhorn-checks.md
+              - Certificados: es/user-docs/certificate-checks.md
+          - Notas de Longhorn para nodo único: es/user-docs/longhorn-single-node-notes.md
+          - Privacidad y telemetría: es/user-docs/privacy-and-telemetry.md
+      - Documentación para desarrolladores:
+          - es/developer-docs/index.md
+          - Targets de Make: es/developer-docs/make-targets.md
+          - Modos de Productive K3S: es/developer-docs/productive-k3s-modes.md
+          - Parámetros de scripts: es/developer-docs/script-parameters.md
           - Guías:
-              - es/guides/index.md
-              - Desarrollo en macOS: es/guides/macos-development.md
-              - Pruebas después de cambios: es/guides/post-development-testing.md
-              - Desarrollo en Windows: es/guides/windows-development.md
-          - GitHub Actions y releases: es/contributor/github-actions.md
+              - es/developer-docs/guides/index.md
+              - Desarrollo en macOS: es/developer-docs/guides/macos-development.md
+              - Pruebas después de cambios: es/developer-docs/guides/post-development-testing.md
+              - Desarrollo en Windows: es/developer-docs/guides/windows-development.md
+          - GitHub Actions y releases: es/developer-docs/github-actions.md
           - Baseline de soporte:
-              - Ubuntu 22.04: es/contributor/ubuntu-22-04-supported.md
-              - Ubuntu 24.04: es/contributor/ubuntu-24-04-supported.md
-              - Debian 12: es/contributor/debian-12-supported.md
-              - Debian 13: es/contributor/debian-13-supported.md
+              - Ubuntu 22.04: es/developer-docs/ubuntu-22-04-supported.md
+              - Ubuntu 24.04: es/developer-docs/ubuntu-24-04-supported.md
+              - Debian 12: es/developer-docs/debian-12-supported.md
+              - Debian 13: es/developer-docs/debian-13-supported.md
 
 extra:
   social:

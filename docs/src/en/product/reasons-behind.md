@@ -109,5 +109,5 @@ In short, the setup is meant to be small enough to run locally, but structured e
 ## See Also
 
 - [Product overview](index.md)
-- [Longhorn single-node notes](../reference/longhorn-single-node-notes.md)
-- [Certificate checks](../reference/certificate-checks.md)
+- [Longhorn single-node notes](../user-docs/longhorn-single-node-notes.md)
+- [Certificate checks](../user-docs/certificate-checks.md)
