@@ -3,10 +3,10 @@
 -#}
 {% if page and page.url and page.url.startswith('es/') %}
   {% set crumb_home_label = "Inicio" %}
-  {% set crumb_home_url = (config.extra.homepage | d(nav.homepage.url, true) | url) ~ "?lang=es" %}
+  {% set crumb_home_url = base_url ~ "?lang=es" %}
 {% else %}
   {% set crumb_home_label = "Home" %}
-  {% set crumb_home_url = config.extra.homepage | d(nav.homepage.url, true) | url %}
+  {% set crumb_home_url = base_url %}
 {% endif %}
 
 {% set crumbs = [] %}
@@ -29,11 +29,10 @@
     {% set crumbs = [{"label": "Guías" if page.url.startswith('es/') else "Guides", "url": "es/guides/" if page.url.startswith('es/') else "en/guides/"}] %}
   {% elif page.url in ['en/reference/', 'es/reference/'] %}
     {% set crumbs = [
-      {"label": "Referencia" if page.url.startswith('es/') else "Reference", "url": "es/reference/" if page.url.startswith('es/') else "en/reference/"},
-      {"label": "Resumen" if page.url.startswith('es/') else "Overview", "url": None}
+      {"label": "Documentación para usuarios" if page.url.startswith('es/') else "User Docs", "url": None}
     ] %}
   {% elif '/reference/' in page.url %}
-    {% set crumbs = [{"label": "Referencia" if page.url.startswith('es/') else "Reference", "url": "es/reference/" if page.url.startswith('es/') else "en/reference/"}] %}
+    {% set crumbs = [{"label": "Documentación para usuarios" if page.url.startswith('es/') else "User Docs", "url": "es/reference/" if page.url.startswith('es/') else "en/reference/"}] %}
   {% elif page.url in ['en/contributor/', 'es/contributor/'] %}
     {% set crumbs = [
       {"label": "Documentación para contribuidores" if page.url.startswith('es/') else "Contributor Docs", "url": "es/contributor/" if page.url.startswith('es/') else "en/contributor/"},
@@ -47,7 +46,7 @@
 <nav class="md-path" aria-label="{{ 'Navegación' if page and page.url and page.url.startswith('es/') else lang.t('nav') }}">
   <ol class="md-path__list">
     <li class="md-path__item">
-      <a href="{{ crumb_home_url | url }}" class="md-path__link">
+      <a href="{{ crumb_home_url }}" class="md-path__link">
         <span class="md-ellipsis">{{ crumb_home_label }}</span>
       </a>
     </li>
