@@ -109,5 +109,5 @@ En resumen, la idea es que sea lo bastante pequeño como para correr localmente,
 ## Ver también
 
 - [Resumen del producto](index.md)
-- [Notas de Longhorn para nodo único](../reference/longhorn-single-node-notes.md)
-- [Verificaciones de certificados](../reference/certificate-checks.md)
+- [Notas de Longhorn para nodo único](../user-docs/longhorn-single-node-notes.md)
+- [Verificaciones de certificados](../user-docs/certificate-checks.md)

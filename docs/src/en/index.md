@@ -6,15 +6,15 @@ Use this tree when you want the repository guidance, operational references, and
 
 ## Start here
 
-- [Product overview](overview/index.md)
-- [User docs](reference/index.md)
-- [Contributor docs](contributor/index.md)
+- [Product overview](product/index.md)
+- [User docs](user-docs/index.md)
+- [Developer docs](developer-docs/index.md)
 
 ## Direct links
 
-- [Why this stack exists](overview/reasons-behind.md)
-- [Supported platforms](overview/supported-platforms.md)
-- [macOS development](guides/macos-development.md)
-- [Windows development](guides/windows-development.md)
-- [Post-development testing](guides/post-development-testing.md)
-- [Privacy and telemetry](reference/privacy-and-telemetry.md)
+- [Why this stack exists](product/reasons-behind.md)
+- [Supported platforms](product/supported-platforms.md)
+- [macOS development](developer-docs/guides/macos-development.md)
+- [Windows development](developer-docs/guides/windows-development.md)
+- [Post-development testing](developer-docs/guides/post-development-testing.md)
+- [Privacy and telemetry](user-docs/privacy-and-telemetry.md)

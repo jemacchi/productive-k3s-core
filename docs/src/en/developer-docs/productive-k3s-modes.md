@@ -1,0 +1,65 @@
+# Productive K3S Modes
+
+`bootstrap-k3s-stack.sh` exposes explicit execution modes through `--mode`.
+
+## Supported modes
+
+| Mode | Purpose |
+| --- | --- |
+| `single-node` | Default mode. Bootstraps a single-node installation and can install the local stack |
+| `server` | Bootstraps only the base server node components |
+| `agent` | Joins a node as a K3S agent |
+| `stack` | Installs or reuses stack components on top of an existing cluster |
+
+## Operational meaning
+
+The script internally treats the modes as capability switches:
+
+- `single-node`: runs base installation, stack installation, and host-local tasks
+- `server`: runs base installation only
+- `agent`: configures an agent node and requires a server URL plus cluster token
+- `stack`: requires an existing cluster and Helm, then operates only on stack components
+
+## What changes by mode
+
+### `single-node`
+
+- can install `k3s` and Helm
+- can install stack components like `cert-manager`, `Longhorn`, `Rancher`, and the in-cluster registry
+- can manage local `/etc/hosts`
+- can manage host-local NFS
+- can install local Docker trust for the self-signed registry
+
+### `server`
+
+- can install or reuse `k3s` and Helm
+- skips stack-only components
+- skips host-local stack integrations such as NFS and Docker registry trust
+
+### `agent`
+
+- targets `k3s-agent` instead of the server service
+- prompts for `Agent server URL` and `Agent cluster token` when an agent install is needed
+- skips Helm and stack components
+
+### `stack`
+
+- requires an already running `k3s` server and an installed `helm`
+- does not install base `k3s`
+- focuses on stack-level components and cluster issuers
+
+## Why the mode split matters
+
+The mode model is what makes `productive-k3s-infra` orchestration possible. It gives infrastructure automation a stable interface for:
+
+- base node provisioning
+- agent joins
+- cluster stack installation after the cluster already exists
+
+## Notes
+
+!!! note
+    `single-node` is still the simplest all-in-one path for direct local usage.
+
+!!! note
+    `server`, `agent`, and `stack` are especially valuable when the bootstrap sequence is orchestrated by another layer.

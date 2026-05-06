@@ -59,8 +59,8 @@ Recommended for a smoother experience:
 
 ## See also
 
-- [Ubuntu 22.04 support baseline](../contributor/ubuntu-22-04-supported.md)
-- [Ubuntu 24.04 support baseline](../contributor/ubuntu-24-04-supported.md)
-- [Debian 12 support baseline](../contributor/debian-12-supported.md)
-- [Debian 13 support baseline](../contributor/debian-13-supported.md)
-- [Post-development testing](../guides/post-development-testing.md)
+- [Ubuntu 22.04 support baseline](../developer-docs/ubuntu-22-04-supported.md)
+- [Ubuntu 24.04 support baseline](../developer-docs/ubuntu-24-04-supported.md)
+- [Debian 12 support baseline](../developer-docs/debian-12-supported.md)
+- [Debian 13 support baseline](../developer-docs/debian-13-supported.md)
+- [Post-development testing](../developer-docs/guides/post-development-testing.md)

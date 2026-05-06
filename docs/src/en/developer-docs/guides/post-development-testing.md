@@ -456,9 +456,9 @@ A change is considered validated when:
 ## Related Docs
 
 - [Guides overview](index.md)
-- [k3s checks](../reference/k3s-checks.md)
-- [Ingress checks](../reference/ingress-checks.md)
-- [Rancher checks](../reference/rancher-checks.md)
-- [Registry checks](../reference/registry-checks.md)
-- [Longhorn checks](../reference/longhorn-checks.md)
-- [Certificate checks](../reference/certificate-checks.md)
+- [k3s checks](../../user-docs/k3s-checks.md)
+- [Ingress checks](../../user-docs/ingress-checks.md)
+- [Rancher checks](../../user-docs/rancher-checks.md)
+- [Registry checks](../../user-docs/registry-checks.md)
+- [Longhorn checks](../../user-docs/longhorn-checks.md)
+- [Certificate checks](../../user-docs/certificate-checks.md)

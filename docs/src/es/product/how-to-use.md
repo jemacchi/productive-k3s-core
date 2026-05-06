@@ -48,9 +48,9 @@ Ese instalador descarga el bundle correspondiente a ese release y ejecuta el boo
 
 Cuando el bootstrap termina, usá la documentación de validación y referencia para inspeccionar el resultado:
 
-- [Verificaciones de k3s](../reference/k3s-checks.md)
-- [Verificaciones de ingress](../reference/ingress-checks.md)
-- [Verificaciones de Rancher](../reference/rancher-checks.md)
-- [Verificaciones del registry](../reference/registry-checks.md)
-- [Verificaciones de Longhorn](../reference/longhorn-checks.md)
-- [Verificaciones de certificados](../reference/certificate-checks.md)
+- [Verificaciones de k3s](../user-docs/k3s-checks.md)
+- [Verificaciones de ingress](../user-docs/ingress-checks.md)
+- [Verificaciones de Rancher](../user-docs/rancher-checks.md)
+- [Verificaciones del registry](../user-docs/registry-checks.md)
+- [Verificaciones de Longhorn](../user-docs/longhorn-checks.md)
+- [Verificaciones de certificados](../user-docs/certificate-checks.md)
