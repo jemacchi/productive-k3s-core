@@ -67,13 +67,20 @@ El workflow de release crea un GitHub Release y sube esos archivos como assets.
 El script instalador queda versionado por release y puede usarse así:
 
 ```bash
-curl -fsSL https://github.com/<owner>/<repo>/releases/download/vX.Y.Z/install-productive-k3s.sh | bash
+curl -fsSL https://github.com/<owner>/<repo>/releases/download/vX.Y.Z/install-productive-k3s.sh | bash -s -- bootstrap
+```
+
+Ahora el instalador expone la misma familia de comandos operativos que el CLI público incluido dentro del bundle. Por ejemplo:
+
+```bash
+curl -fsSL https://github.com/<owner>/<repo>/releases/download/vX.Y.Z/install-productive-k3s.sh | bash -s -- preflight
+curl -fsSL https://github.com/<owner>/<repo>/releases/download/vX.Y.Z/install-productive-k3s.sh | bash -s -- validate --strict
 ```
 
 Todavía pueden pasarse flags adicionales al bootstrap:
 
 ```bash
-curl -fsSL https://github.com/<owner>/<repo>/releases/download/vX.Y.Z/install-productive-k3s.sh | bash -s -- --dry-run
+curl -fsSL https://github.com/<owner>/<repo>/releases/download/vX.Y.Z/install-productive-k3s.sh | bash -s -- bootstrap --dry-run
 ```
 
 ## Workflow de validación hosteada
