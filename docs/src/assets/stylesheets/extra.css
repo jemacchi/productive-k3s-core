@@ -407,6 +407,33 @@ body {
   padding-bottom: 0.5rem;
 }
 
+.md-footer__link,
+.md-footer__link:hover,
+.md-footer__link:focus {
+  color: var(--pk3s-text) !important;
+}
+
+.md-footer__title,
+.md-footer__direction,
+.md-footer__button {
+  color: var(--pk3s-muted) !important;
+}
+
+.md-footer__link:hover .md-footer__title,
+.md-footer__link:hover .md-footer__direction,
+.md-footer__link:hover .md-footer__button,
+.md-footer__link:focus .md-footer__title,
+.md-footer__link:focus .md-footer__direction,
+.md-footer__link:focus .md-footer__button,
+.md-footer__link:hover .md-ellipsis,
+.md-footer__link:focus .md-ellipsis {
+  color: var(--pk3s-text) !important;
+}
+
+.md-footer__link .md-ellipsis {
+  color: var(--pk3s-text) !important;
+}
+
 .md-footer-meta {
   background: transparent;
   border-top: 1px solid rgba(216, 226, 241, 0.9);
