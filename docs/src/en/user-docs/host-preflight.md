@@ -37,7 +37,7 @@ Or call the operational wrapper:
 Or use the release installer path without cloning the repository:
 
 ```bash
-curl -fsSL https://github.com/<owner>/<repo>/releases/download/vX.Y.Z/install-productive-k3s.sh | bash -s -- preflight
+curl -fsSL https://github.com/<owner>/<repo>/releases/download/vX.Y.Z/productive-k3s-cli.sh | bash -s -- preflight
 ```
 
 ## Strict mode
