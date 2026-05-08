@@ -4,7 +4,7 @@ El repositorio expone un `Makefile` pequeño en la raíz más un `Makefile` de m
 
 El `Makefile` raíz delega a dos dispatchers shell:
 
-- `./scripts/productive-k3s.sh` para comandos operativos que también forman parte del contrato de instalación release
+- `./productive-k3s.sh` para comandos operativos que también forman parte del contrato de instalación release
 - `./scripts/productive-k3s-dev.sh` para docs, tests y otros entry points de desarrollo
 
 ## Targets de raíz

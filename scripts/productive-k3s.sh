@@ -2,12 +2,13 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BUNDLE_INFO_PATH="${SCRIPT_DIR}/../bundle-info.json"
 
 usage() {
   cat <<'EOF'
 Usage:
-  ./scripts/productive-k3s.sh <command> [args...]
-  ./scripts/productive-k3s.sh [bootstrap args...]
+  ./productive-k3s.sh <command> [args...]
+  ./productive-k3s.sh [bootstrap args...]
 
 Operational commands:
   bundle      Show bundle metadata for automation
@@ -18,11 +19,11 @@ Operational commands:
   help        Show this help
 
 Examples:
-  ./scripts/productive-k3s.sh bundle info --json
-  ./scripts/productive-k3s.sh preflight
-  ./scripts/productive-k3s.sh preflight --strict
-  ./scripts/productive-k3s.sh bootstrap --dry-run
-  ./scripts/productive-k3s.sh validate --strict
+  ./productive-k3s.sh bundle info --json
+  ./productive-k3s.sh preflight
+  ./productive-k3s.sh preflight --strict
+  ./productive-k3s.sh bootstrap --dry-run
+  ./productive-k3s.sh validate --strict
 
 If no command is provided, or the first argument is an option, the wrapper
 defaults to `bootstrap` for release-installer compatibility.
@@ -39,12 +40,6 @@ run_bootstrap() {
 
 run_backup() {
   exec "${SCRIPT_DIR}/backup-k3s-stack.sh" "$@"
-}
-
-bundle_info_path() {
-  local repo_root
-  repo_root="$(cd "${SCRIPT_DIR}/.." && pwd)"
-  printf '%s\n' "${repo_root}/bundle-info.json"
 }
 
 resolve_bundle_version_fallback() {
@@ -64,10 +59,9 @@ resolve_bundle_version_fallback() {
 }
 
 print_bundle_info_json() {
-  local info_path version
-  info_path="$(bundle_info_path)"
-  if [[ -f "$info_path" ]]; then
-    cat "$info_path"
+  local version
+  if [[ -f "$BUNDLE_INFO_PATH" ]]; then
+    cat "$BUNDLE_INFO_PATH"
     return 0
   fi
 
@@ -93,7 +87,7 @@ EOF
 
 run_bundle() {
   if (($# != 2)) || [[ "$1" != "info" || "$2" != "--json" ]]; then
-    printf 'Usage: ./scripts/productive-k3s.sh bundle info --json\n' >&2
+    printf 'Usage: ./productive-k3s.sh bundle info --json\n' >&2
     return 2
   fi
   print_bundle_info_json

@@ -20,7 +20,7 @@ TAG="$1"
 OUTPUT_DIR="$2"
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ARCHIVE_NAME="productive-k3s-${TAG}.tar.gz"
-PREFIX="productive-k3s-${TAG}/"
+ARCHIVE_PATH="${OUTPUT_DIR}/${ARCHIVE_NAME}"
 TMP_DIR="$(mktemp -d)"
 STAGE_DIR="${TMP_DIR}/productive-k3s-${TAG}"
 
@@ -75,6 +75,6 @@ cat > "${STAGE_DIR}/bundle-info.json" <<EOF
 }
 EOF
 
-tar -C "$TMP_DIR" -czf "${OUTPUT_DIR}/${ARCHIVE_NAME}" "productive-k3s-${TAG}"
+tar -czf "$ARCHIVE_PATH" -C "$TMP_DIR" "productive-k3s-${TAG}"
 
-printf '%s\n' "${OUTPUT_DIR}/${ARCHIVE_NAME}"
+printf '%s\n' "$ARCHIVE_PATH"

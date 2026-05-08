@@ -24,6 +24,7 @@ PUBLIC_ARTIFACT_PATH=""
 ARTIFACT_STATUS="failed"
 BOOTSTRAP_MANIFEST_REMOTE=""
 BOOTSTRAP_MANIFEST_LOCAL=""
+TRANSFER_STAGING_ROOT=""
 TRANSFER_STAGED_REPO=""
 
 usage() {
@@ -122,11 +123,12 @@ apply_platform_defaults() {
 }
 
 cleanup() {
-  write_artifacts
-  if [[ -n "$TRANSFER_STAGED_REPO" ]]; then
-    rm -rf "$(dirname "$TRANSFER_STAGED_REPO")"
-    TRANSFER_STAGED_REPO=""
+  if [[ -n "$TRANSFER_STAGING_ROOT" && -d "$TRANSFER_STAGING_ROOT" ]]; then
+    rm -rf "$TRANSFER_STAGING_ROOT"
+    TRANSFER_STAGING_ROOT=""
   fi
+  write_artifacts
+  TRANSFER_STAGED_REPO=""
   if [[ "$KEEP_VM" == "y" || "$VM_CREATED" != "y" ]]; then
     return
   fi
@@ -308,36 +310,37 @@ launch_vm() {
 }
 
 copy_repo() {
-  prepare_repo_transfer_dir
   local remote_parent
   remote_parent="$(dirname "$REMOTE_DIR")"
   log "Copying repository to VM"
   multipass exec "$VM_NAME" -- bash -lc "sudo mkdir -p '$remote_parent' && sudo chown '$REMOTE_USER':'$REMOTE_USER' '$remote_parent' && rm -rf '$REMOTE_DIR'"
+  prepare_repo_transfer_dir
   multipass transfer -r "$TRANSFER_STAGED_REPO" "$VM_NAME:$remote_parent"
 }
 
 prepare_repo_transfer_dir() {
-  local stage_root stage_repo
-  stage_root="${ARTIFACTS_DIR}/.transfer-staging/${ARTIFACT_BASENAME}"
-  stage_repo="${stage_root}/${REPO_NAME}"
-  rm -rf "$stage_root"
-  mkdir -p "$stage_repo"
-  (
-    cd "$REPO_DIR"
-    tar \
-      --exclude=.git \
-      --exclude=.codex \
-      --exclude=dist \
-      --exclude=runs \
-      --exclude=test-artifacts \
-      --exclude=docs/.venv \
-      --exclude=docs/site \
-      -cf - .
-  ) | (
-    cd "$stage_repo"
-    tar -xf -
-  )
-  TRANSFER_STAGED_REPO="$stage_repo"
+  local staged_name staging_parent
+
+  staged_name="$(basename "$REMOTE_DIR")"
+  if [[ -z "$TRANSFER_STAGING_ROOT" ]]; then
+    staging_parent="${REPO_DIR}/test-artifacts/.transfer-staging"
+    mkdir -p "$staging_parent"
+    TRANSFER_STAGING_ROOT="$(mktemp -d "${staging_parent}/staging.XXXXXX")"
+  fi
+
+  TRANSFER_STAGED_REPO="${TRANSFER_STAGING_ROOT}/${staged_name}"
+  rm -rf "$TRANSFER_STAGED_REPO"
+  mkdir -p "$TRANSFER_STAGED_REPO"
+
+  tar -C "$REPO_DIR" \
+    --exclude=.git \
+    --exclude=.codex \
+    --exclude=dist \
+    --exclude=docs/.venv \
+    --exclude=docs/site \
+    --exclude=runs \
+    --exclude=test-artifacts \
+    -cf - . | tar -xf - -C "$TRANSFER_STAGED_REPO"
 }
 
 run_in_vm() {

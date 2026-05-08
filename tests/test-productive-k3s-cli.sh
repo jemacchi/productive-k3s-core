@@ -22,24 +22,55 @@ printf '%s\n' "$cli_help" | grep -q "bundle" || fail "public CLI help does not l
 printf '%s\n' "$root_cli_help" | grep -q "bootstrap" || fail "root public CLI help does not list bootstrap"
 pass "public CLI help lists operational commands"
 
-bundle_info_json="$(cd "$REPO_DIR" && ./productive-k3s.sh bundle info --json)"
-printf '%s\n' "$bundle_info_json" | grep -q '"bundle_name": "productive-k3s"' || fail "bundle info json missing bundle_name"
-printf '%s\n' "$bundle_info_json" | grep -q '"cli_entrypoint": "productive-k3s.sh"' || fail "bundle info json missing cli_entrypoint"
-pass "bundle info command returns expected json"
-
 bootstrap_help="$(cd "$REPO_DIR" && ./scripts/productive-k3s.sh bootstrap --help)"
 printf '%s\n' "$bootstrap_help" | grep -q -- '--dry-run' || fail "bootstrap help was not forwarded"
 pass "bootstrap subcommand forwards CLI help"
 
-preflight_help="$(cd "$REPO_DIR" && ./scripts/productive-k3s.sh preflight --help)"
+preflight_help="$(cd "$REPO_DIR" && ./productive-k3s.sh preflight --help)"
 printf '%s\n' "$preflight_help" | grep -q -- '--mode <single-node|server|agent|stack>' || fail "preflight help was not forwarded"
 pass "preflight subcommand forwards CLI help"
 
-validate_help="$(cd "$REPO_DIR" && ./scripts/productive-k3s.sh validate --help)"
+validate_help="$(cd "$REPO_DIR" && ./productive-k3s.sh validate --help)"
 printf '%s\n' "$validate_help" | grep -q -- '--strict' || fail "validate help was not forwarded"
 pass "validate subcommand forwards CLI help"
 
-if (cd "$REPO_DIR" && ./scripts/productive-k3s.sh unsupported >/tmp/productive-k3s-cli-unsupported.out 2>&1); then
+local_bundle_info="$(cd "$REPO_DIR" && ./productive-k3s.sh bundle info --json)"
+printf '%s\n' "$local_bundle_info" | jq -e '
+  .schema_version == "1" and
+  .bundle_name == "productive-k3s" and
+  .bundle_type == "productive-k3s" and
+  (.bundle_version | type) == "string" and
+  (.bundle_version | length) > 0 and
+  .cli_entrypoint == "productive-k3s.sh" and
+  .platform == "any" and
+  .api_compatibility.contract == "productive-k3s-cli-bundle-info/v1"
+' >/dev/null || fail "local bundle info JSON contract did not match expected values"
+pass "local bundle info JSON contract is exposed"
+
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+archive_path="$(cd "$REPO_DIR" && ./scripts/build-release-bundle.sh HEAD "$TMP_DIR")"
+extract_dir="${TMP_DIR}/bundle"
+mkdir -p "$extract_dir"
+tar -xzf "$archive_path" -C "$extract_dir"
+
+bundle_root="${extract_dir}/productive-k3s-HEAD"
+[[ -x "${bundle_root}/productive-k3s.sh" ]] || fail "bundle root entrypoint is missing"
+
+bundle_info="$(cd "$bundle_root" && ./productive-k3s.sh bundle info --json)"
+printf '%s\n' "$bundle_info" | jq -e '
+  .schema_version == "1" and
+  .bundle_name == "productive-k3s" and
+  .bundle_type == "productive-k3s" and
+  .bundle_version == "HEAD" and
+  .cli_entrypoint == "productive-k3s.sh" and
+  .platform == "any" and
+  .api_compatibility.contract == "productive-k3s-cli-bundle-info/v1"
+' >/dev/null || fail "bundle info JSON contract did not match expected values"
+pass "bundle info JSON contract is exposed from the built artifact"
+
+if (cd "$REPO_DIR" && ./productive-k3s.sh unsupported >/tmp/productive-k3s-cli-unsupported.out 2>&1); then
   fail "unsupported public CLI command unexpectedly succeeded"
 fi
 grep -q "Unsupported command" /tmp/productive-k3s-cli-unsupported.out || fail "unsupported public CLI command message missing"
