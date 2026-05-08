@@ -4,7 +4,7 @@ The repository exposes a small root `Makefile` plus a larger matrix `Makefile` u
 
 The root `Makefile` delegates to two shell dispatchers:
 
-- `./scripts/productive-k3s.sh` for operational commands that are also part of the release install contract
+- `./productive-k3s.sh` for operational commands that are also part of the release install contract
 - `./scripts/productive-k3s-dev.sh` for docs, tests, and other development entry points
 
 ## Root targets
