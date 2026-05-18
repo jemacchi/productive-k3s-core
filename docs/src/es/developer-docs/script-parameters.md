@@ -76,11 +76,26 @@ El script de bootstrap lee estas variables de entorno:
 - `TELEMETRY_OUTBOX_DIR`
 - `TELEMETRY_USER_AGENT`
 
+### Variables de entorno relacionadas con el engine
+
+El script de bootstrap también lee:
+
+- `PRODUCTIVE_K3S_ENGINE`: `native` o `k3sup`. Default: `native`.
+
+Cuando se usa el engine experimental `k3sup` en flujos orquestados con modos separados, la capa wrapper también puede proveer:
+
+- `PRODUCTIVE_K3S_SSH_HOST`
+- `PRODUCTIVE_K3S_SSH_USER`
+- `PRODUCTIVE_K3S_SSH_PORT`
+- `PRODUCTIVE_K3S_SSH_KEY_PATH`
+- `PRODUCTIVE_K3S_SSH_EXTRA_OPTS`
+
 ### Settings persistidos en el manifest
 
 El manifest de bootstrap registra settings como:
 
 - `bootstrap_mode`
+- `k3s_installation_engine`
 - `agent_server_url_provided`
 - `agent_cluster_token_provided`
 - `base_domain`
