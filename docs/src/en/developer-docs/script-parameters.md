@@ -76,11 +76,26 @@ The bootstrap script reads these environment variables:
 - `TELEMETRY_OUTBOX_DIR`
 - `TELEMETRY_USER_AGENT`
 
+### Engine-related environment variables
+
+The bootstrap script also reads:
+
+- `PRODUCTIVE_K3S_ENGINE`: `native` or `k3sup`. Default: `native`.
+
+When the experimental `k3sup` engine is used in orchestrated split-mode flows, the wrapper layer may also provide:
+
+- `PRODUCTIVE_K3S_SSH_HOST`
+- `PRODUCTIVE_K3S_SSH_USER`
+- `PRODUCTIVE_K3S_SSH_PORT`
+- `PRODUCTIVE_K3S_SSH_KEY_PATH`
+- `PRODUCTIVE_K3S_SSH_EXTRA_OPTS`
+
 ### Persisted run settings
 
 The bootstrap manifest records settings such as:
 
 - `bootstrap_mode`
+- `k3s_installation_engine`
 - `agent_server_url_provided`
 - `agent_cluster_token_provided`
 - `base_domain`

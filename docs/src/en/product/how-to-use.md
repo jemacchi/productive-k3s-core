@@ -57,6 +57,33 @@ By default, the practical target is a single supported VM or Linux host.
 
 This is not intended for an arbitrary Linux distribution. The target must match the [supported platforms](supported-platforms.md) page, whether it is a real host or a VM.
 
+## Optional install engine
+
+The default and expected install engine is the native repository bootstrap path.
+
+An optional experimental environment variable is also available:
+
+```bash
+PRODUCTIVE_K3S_ENGINE=native|k3sup
+```
+
+- `native`: default and primary supported path
+- `k3sup`: optional experimental backend for the base K3S installation step
+
+`k3sup` was integrated as a complementary option, not as a replacement for `productive-k3s-core`.
+Its purpose is to let advanced users experiment with the same Productive K3S bootstrap and stack decisions while using a K3S install tool they already know.
+
+Important scope boundaries:
+
+- `productive-k3s-core` remains the bootstrap, validation, and operations layer
+- `k3sup` only affects the base K3S installation backend
+- stack behavior after K3S exists does not change
+- the support guarantees remain the ones documented in the repository support matrix
+
+If you use `PRODUCTIVE_K3S_ENGINE=k3sup`, treat it as experimental.
+In split-node or manually orchestrated flows, you are responsible for providing the correct SSH context and related environment when that backend needs it.
+That does not expand the public support matrix to arbitrary platforms or arbitrary orchestration models.
+
 ## Basic install
 
 Replace `X.Y.Z` with the release you want to install:

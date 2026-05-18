@@ -57,6 +57,33 @@ Por defecto, el destino práctico es una única VM soportada o un host Linux sop
 
 Esto no está pensado para cualquier distribución Linux. El destino tiene que coincidir con la página de [plataformas soportadas](supported-platforms.md), ya sea como host real o como VM.
 
+## Engine opcional de instalación
+
+El engine por default y esperado es el camino nativo de bootstrap del repositorio.
+
+También existe una variable de entorno opcional y experimental:
+
+```bash
+PRODUCTIVE_K3S_ENGINE=native|k3sup
+```
+
+- `native`: camino default y principal soportado
+- `k3sup`: backend experimental opcional para la etapa base de instalación de K3S
+
+`k3sup` se integró como una opción complementaria, no como un reemplazo de `productive-k3s-core`.
+Su propósito es permitir que usuarios avanzados experimenten con las mismas decisiones de bootstrap y stack de Productive K3S usando una herramienta de instalación de K3S con la que ya se sientan cómodos.
+
+Límites importantes de scope:
+
+- `productive-k3s-core` sigue siendo la capa de bootstrap, validación y operaciones
+- `k3sup` sólo afecta el backend de instalación base de K3S
+- el comportamiento del stack después de que K3S existe no cambia
+- las garantías de soporte siguen siendo las documentadas en la matriz soportada del repositorio
+
+Si usás `PRODUCTIVE_K3S_ENGINE=k3sup`, tratá ese camino como experimental.
+En flujos de nodos separados o en orquestaciones manuales, la responsabilidad de pasar el contexto SSH correcto y el entorno relacionado cuando ese backend lo necesite es tuya.
+Eso no amplía la matriz pública de soporte hacia plataformas arbitrarias ni hacia modelos arbitrarios de orquestación.
+
 ## Instalación básica
 
 Reemplazá `X.Y.Z` por el release que quieras instalar:

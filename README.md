@@ -23,6 +23,14 @@ Bootstrap modes:
 - `agent`: join a node to an existing K3S server
 - `stack`: install or reuse stack components on top of an existing cluster
 
+Optional install engine:
+
+- `PRODUCTIVE_K3S_ENGINE=native`: default and expected path
+- `PRODUCTIVE_K3S_ENGINE=k3sup`: experimental complementary backend for the base K3S install step
+
+`k3sup` integration does not redefine the scope of `productive-k3s-core`.
+The repository support guarantees are still the tested platform and mode matrix documented in the project, not arbitrary third-party orchestration combinations.
+
 Current public support baseline:
 
 - Ubuntu `24.04` and `22.04` on `amd64`

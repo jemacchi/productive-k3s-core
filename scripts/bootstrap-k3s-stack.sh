@@ -29,6 +29,12 @@ err(){ printf "\r\n%s[ERROR]%s %s\r\n" "$COLOR_RED" "$COLOR_RESET" "$*"; }
 
 DRY_RUN=0
 MODE="single-node"
+PRODUCTIVE_K3S_ENGINE="${PRODUCTIVE_K3S_ENGINE:-native}"
+PRODUCTIVE_K3S_SSH_HOST="${PRODUCTIVE_K3S_SSH_HOST:-}"
+PRODUCTIVE_K3S_SSH_USER="${PRODUCTIVE_K3S_SSH_USER:-}"
+PRODUCTIVE_K3S_SSH_PORT="${PRODUCTIVE_K3S_SSH_PORT:-22}"
+PRODUCTIVE_K3S_SSH_KEY_PATH="${PRODUCTIVE_K3S_SSH_KEY_PATH:-}"
+PRODUCTIVE_K3S_SSH_EXTRA_OPTS="${PRODUCTIVE_K3S_SSH_EXTRA_OPTS:-}"
 DRY_RUN_REUSE=()
 DRY_RUN_INSTALL=()
 DRY_RUN_SKIP=()
@@ -69,6 +75,7 @@ PUBLIC_MANIFEST_SETTINGS=(
   host_os_pretty_name
   platform_support
   bootstrap_mode
+  k3s_installation_engine
   agent_server_url_provided
   agent_cluster_token_provided
   tls_mode
@@ -157,6 +164,17 @@ result_for_mode() {
   else
     printf '%s' "$1"
   fi
+}
+
+validate_k3s_engine() {
+  case "$PRODUCTIVE_K3S_ENGINE" in
+    native|k3sup)
+      ;;
+    *)
+      err "Unsupported k3s installation engine: ${PRODUCTIVE_K3S_ENGINE}"
+      exit 1
+      ;;
+  esac
 }
 
 json_escape() {
@@ -786,6 +804,9 @@ Modes:
   server       Bootstraps only the base server node components.
   agent        Reserved for future agent node join support.
   stack        Installs or reuses stack components on top of an existing cluster.
+
+Environment:
+  PRODUCTIVE_K3S_ENGINE=native|k3sup  Select the base k3s installation engine (default: native).
 EOF
         exit 0
         ;;
@@ -1307,6 +1328,26 @@ install_k3s_if_needed() {
 
   track_install "$install_label"
   ensure_packages "k3s installation" curl ca-certificates
+  if [[ "$PRODUCTIVE_K3S_ENGINE" == "k3sup" ]]; then
+    install_k3sup_if_needed
+    install_k3s_with_k3sup
+  else
+    install_k3s_with_native
+  fi
+  manifest_complete_component "k3s" "$(result_for_mode installed)"
+}
+
+install_k3sup_if_needed() {
+  if need_cmd k3sup; then
+    return 0
+  fi
+
+  log "Installing k3sup..."
+  run_shell "Downloading k3sup installer" "curl -sLS https://get.k3sup.dev | sh"
+  run_shell "Installing k3sup into /usr/local/bin" "sudo install k3sup /usr/local/bin/"
+}
+
+install_k3s_with_native() {
   if [[ "$MODE" == "agent" ]]; then
     if [[ -z "${AGENT_SERVER_URL:-}" || -z "${AGENT_CLUSTER_TOKEN:-}" ]]; then
       err "Agent mode requires both the server URL and cluster token."
@@ -1316,11 +1357,88 @@ install_k3s_if_needed() {
     printf -v install_cmd 'curl -sfL https://get.k3s.io | K3S_URL=%q K3S_TOKEN=%q INSTALL_K3S_EXEC=agent sh -' "$AGENT_SERVER_URL" "$AGENT_CLUSTER_TOKEN"
     log "Installing k3s agent..."
     run_shell "Installing k3s agent" "$install_cmd"
-  else
-    log "Installing k3s (stable channel)..."
-    run_shell "Installing k3s (stable channel)" "curl -sfL https://get.k3s.io | sh -"
+    return
   fi
-  manifest_complete_component "k3s" "$(result_for_mode installed)"
+
+  log "Installing k3s (stable channel)..."
+  run_shell "Installing k3s (stable channel)" "curl -sfL https://get.k3s.io | sh -"
+}
+
+k3sup_ssh_args() {
+  local args=()
+
+  if [[ -n "$PRODUCTIVE_K3S_SSH_KEY_PATH" ]]; then
+    args+=("--ssh-key" "$PRODUCTIVE_K3S_SSH_KEY_PATH")
+  fi
+  if [[ -n "$PRODUCTIVE_K3S_SSH_PORT" ]]; then
+    args+=("--ssh-port" "$PRODUCTIVE_K3S_SSH_PORT")
+  fi
+
+  printf '%s\0' "${args[@]}"
+}
+
+k3sup_remote_target_args() {
+  local target_flag="${1:---host}"
+  local host="${2:-$PRODUCTIVE_K3S_SSH_HOST}"
+  local user="${3:-$PRODUCTIVE_K3S_SSH_USER}"
+  local -a args=()
+
+  [[ -n "$host" ]] || {
+    err "k3sup engine requires PRODUCTIVE_K3S_SSH_HOST for remote bootstrap modes."
+    exit 1
+  }
+  [[ -n "$user" ]] || {
+    err "k3sup engine requires PRODUCTIVE_K3S_SSH_USER for remote bootstrap modes."
+    exit 1
+  }
+
+  args+=("$target_flag" "$host" "--user" "$user")
+  while IFS= read -r -d '' arg; do
+    args+=("$arg")
+  done < <(k3sup_ssh_args)
+
+  printf '%q ' "${args[@]}"
+}
+
+install_k3s_with_k3sup() {
+  local install_cmd=""
+
+  case "$MODE" in
+    single-node|server)
+      log "Installing k3s with k3sup..."
+      run_shell "Creating ${HOME}/.kube for k3sup kubeconfig output" "mkdir -p ${HOME}/.kube"
+      printf -v install_cmd 'k3sup install --local --local-path %q --context %q' "${HOME}/.kube/k3sup-${MODE}.yaml" "productive-k3s-${MODE}"
+      run_shell "Installing k3s with k3sup" "$install_cmd"
+      ;;
+    agent)
+      [[ -n "${AGENT_SERVER_URL:-}" ]] || {
+        err "Agent mode requires both the server URL and cluster token."
+        exit 1
+      }
+      [[ -n "${AGENT_CLUSTER_TOKEN:-}" ]] || {
+        err "Agent mode requires both the server URL and cluster token."
+        exit 1
+      }
+      local server_host="${AGENT_SERVER_URL#https://}"
+      server_host="${server_host%%:*}"
+      [[ -n "$server_host" ]] || {
+        err "Could not derive a server host from AGENT_SERVER_URL for k3sup."
+        exit 1
+      }
+
+      printf -v install_cmd 'k3sup join %s --server-ip %q --server-user %q --k3s-channel %q' \
+        "$(k3sup_remote_target_args --ip "$PRODUCTIVE_K3S_SSH_HOST" "$PRODUCTIVE_K3S_SSH_USER")" \
+        "$server_host" \
+        "${PRODUCTIVE_K3S_SSH_USER}" \
+        "stable"
+      log "Joining k3s agent with k3sup..."
+      run_shell "Joining k3s agent with k3sup" "$install_cmd"
+      ;;
+    *)
+      err "k3sup engine is not supported for mode '${MODE}'."
+      exit 1
+      ;;
+  esac
 }
 
 install_helm_if_needed() {
@@ -1871,6 +1989,7 @@ install_nfs_if_needed() {
 }
 
 main() {
+  validate_k3s_engine
   parse_args "$@"
   init_run_manifest
   trap cleanup_exit EXIT
@@ -1896,11 +2015,13 @@ main() {
 
   log "Incremental bootstrap: k3s + Rancher + Longhorn + Registry (${OS_PRETTY_NAME})"
   log "Mode: ${MODE} (${mode_label})"
+  log "k3s installation engine: ${PRODUCTIVE_K3S_ENGINE}"
   line "  Run manifest: ${RUN_MANIFEST}"
   if [[ "$DRY_RUN" == "1" ]]; then
     warn "Running in dry-run mode. No changes will be applied."
   fi
   manifest_set_setting "bootstrap_mode" "$MODE"
+  manifest_set_setting "k3s_installation_engine" "$PRODUCTIVE_K3S_ENGINE"
   manifest_set_setting "telemetry_enabled" "$(is_truthy "${TELEMETRY_ENABLED:-false}" && printf 'y' || printf 'n')"
   manifest_set_setting "telemetry_max_retries" "${TELEMETRY_MAX_RETRIES}"
   local k3s_detected_state="missing"

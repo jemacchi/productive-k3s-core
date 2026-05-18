@@ -20,6 +20,7 @@ Development commands:
   test-bootstrap-modes
   test-artifact-tools
   test-productive-k3s-core-cli
+  test-in-vm-engine-propagation
   test-agent-smoke
   test-smoke
   test-core
@@ -85,6 +86,10 @@ main() {
     test-productive-k3s-core-cli)
       shift
       exec bash "${REPO_DIR}/tests/test-productive-k3s-core-cli.sh" "$@"
+      ;;
+    test-in-vm-engine-propagation)
+      shift
+      exec bash "${REPO_DIR}/tests/test-in-vm-engine-propagation.sh" "$@"
       ;;
     test-agent-smoke)
       shift

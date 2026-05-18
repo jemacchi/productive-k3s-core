@@ -348,6 +348,23 @@ run_in_vm() {
   multipass exec "$VM_NAME" -- bash -lc "$cmd"
 }
 
+bootstrap_engine_env_prefix() {
+  if [[ -n "${PRODUCTIVE_K3S_ENGINE:-}" ]]; then
+    printf 'PRODUCTIVE_K3S_ENGINE=%q ' "${PRODUCTIVE_K3S_ENGINE}"
+  fi
+}
+
+bootstrap_command_in_vm() {
+  local mode_args="$1"
+  local engine_prefix
+  engine_prefix="$(bootstrap_engine_env_prefix)"
+  printf "cd '%s' && printf '%%s' %s | %s./scripts/bootstrap-k3s-stack.sh --mode single-node %s" \
+    "$REMOTE_DIR" \
+    "$2" \
+    "$engine_prefix" \
+    "$mode_args"
+}
+
 capture_bootstrap_manifest() {
   local remote_manifest local_target
   remote_manifest="$(run_in_vm "cd '$REMOTE_DIR' && ls -1t runs/bootstrap-*.json 2>/dev/null | head -1" | tr -d '\r')"
@@ -367,7 +384,7 @@ run_bootstrap_with_answers() {
   local answers="$2"
   local escaped_answers
   escaped_answers=$(printf '%q' "$answers")
-  run_in_vm "cd '$REMOTE_DIR' && printf '%s' $escaped_answers | ./scripts/bootstrap-k3s-stack.sh --mode single-node $mode"
+  run_in_vm "$(bootstrap_command_in_vm "$mode" "$escaped_answers")"
   capture_bootstrap_manifest
 }
 
