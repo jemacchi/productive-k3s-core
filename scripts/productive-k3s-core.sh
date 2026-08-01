@@ -8,6 +8,8 @@ source "${SCRIPT_DIR}/component-versions.sh"
 source "${SCRIPT_DIR}/runtime-contract.sh"
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/addons-runtime.sh"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/export-runtime.sh"
 BUNDLE_INFO_PATH="${SCRIPT_DIR}/../bundle-info.json"
 TELEMETRY_EVENT_SENDER="${SCRIPT_DIR}/send-telemetry-event.sh"
 TELEMETRY_MARKER="${TELEMETRY_MARKER:-pk3s-public-v1}"
@@ -18,8 +20,9 @@ Usage:
   ./productive-k3s-core.sh <command> [args...]
   ./productive-k3s-core.sh addon validate --tgz <file>
   ./productive-k3s-core.sh addon install (--tgz <file> | <name>) [--public-host <fqdn>]
-  ./productive-k3s-core.sh stack <install|validate|backup|cleanup> <name> [args...]
+  ./productive-k3s-core.sh stack <install|export|validate|backup|cleanup> <name> [args...]
   ./productive-k3s-core.sh stack install --tgz <file> [args...]
+  ./productive-k3s-core.sh stack export --tgz <file> --output <dir|archive>
   ./productive-k3s-core.sh dev addon validate --source <dir>
   ./productive-k3s-core.sh dev stack validate --source <dir>
   ./productive-k3s-core.sh [apply args...]
@@ -43,6 +46,7 @@ Examples:
   ./productive-k3s-core.sh preflight --strict
   ./productive-k3s-core.sh apply --dry-run
   ./productive-k3s-core.sh stack install base
+  ./productive-k3s-core.sh stack export --tgz ./base-stack.tgz --output ./base-installer
   ./productive-k3s-core.sh stack validate base --strict
   ./productive-k3s-core.sh validate --strict
   ./productive-k3s-core.sh addon validate --tgz ./longhorn-addon.tgz
@@ -1027,6 +1031,88 @@ run_stack_install_from_overlay() {
   )
 }
 
+materialize_export_output() {
+  local stage_dir="$1"
+  local output_path="$2"
+  local output_parent output_base
+
+  [[ -n "${output_path}" ]] || {
+    printf 'missing output path for export\n' >&2
+    return 2
+  }
+  [[ ! -e "${output_path}" ]] || {
+    printf 'export output already exists: %s\n' "${output_path}" >&2
+    return 2
+  }
+
+  case "${output_path}" in
+    *.tgz|*.tar.gz)
+      output_parent="$(dirname "${output_path}")"
+      mkdir -p "${output_parent}"
+      output_base="$(basename "${output_path}")"
+      tar -czf "${output_path}" -C "$(dirname "${stage_dir}")" "$(basename "${stage_dir}")"
+      ;;
+    *)
+      mkdir -p "${output_path}"
+      cp -R "${stage_dir}/." "${output_path}/"
+      ;;
+  esac
+}
+
+run_stack_export_from_tgz() {
+  local tgz_path="$1"
+  local output_path="$2"
+  shift 2
+  local repo_root tmp_dir manifest metadata stack_name stage_root bundle_root rc=0
+
+  repo_root="$(cd "${SCRIPT_DIR}/.." && pwd)"
+  tmp_dir="$(extract_tgz_to_temp "${tgz_path}")" || return $?
+  manifest="$(resolve_stack_manifest "${tmp_dir}")" || {
+    rc=$?
+    rm -rf "${tmp_dir}"
+    return "${rc}"
+  }
+  metadata="$(validate_stack_manifest "${manifest}")" || {
+    rc=$?
+    rm -rf "${tmp_dir}"
+    return "${rc}"
+  }
+  validate_stack_bundled_sources "${manifest}" "${tmp_dir}" || {
+    rc=$?
+    rm -rf "${tmp_dir}"
+    return "${rc}"
+  }
+  stack_name="$(printf '%s\n' "${metadata}" | sed -n '1p')"
+
+  stage_root="$(mktemp -d)"
+  bundle_root="${stage_root}/stack-export-${stack_name}"
+
+  mkdir -p "${bundle_root}"
+  export_runtime_init
+  export_runtime_set_metadata "command" "stack export"
+  export_runtime_set_metadata "subject_kind" "stack"
+  export_runtime_set_metadata "subject_ref" "${stack_name}"
+  export_runtime_set_metadata "artifact_name" "stack.tgz"
+  export_runtime_set_metadata "interactive" "$(can_use_tty && printf true || printf false)"
+  export_runtime_set_metadata "telemetry_enabled" "${TELEMETRY_ENABLED:-}"
+  export_runtime_add_env "PRODUCTIVE_K3S_DISTRO" "${PRODUCTIVE_K3S_DISTRO:-k3s}"
+  export_runtime_add_env "PRODUCTIVE_K3S_ENGINE" "${PRODUCTIVE_K3S_ENGINE:-native}"
+  if [[ -n "${TELEMETRY_ENABLED:-}" ]]; then
+    export_runtime_add_env "TELEMETRY_ENABLED" "${TELEMETRY_ENABLED}"
+  fi
+
+  export_runtime_copy_core_runtime "${repo_root}" "${bundle_root}"
+  cp "${tgz_path}" "${bundle_root}/stack.tgz"
+  export_runtime_write_install_config "${bundle_root}/install-config.env"
+  export_runtime_write_manifest "${bundle_root}/manifest.json"
+  export_runtime_write_readme "${bundle_root}/README.md" "${stack_name}" "stack.tgz"
+  export_runtime_write_stack_install_script "${bundle_root}/install.sh" "stack.tgz" "$@"
+  materialize_export_output "${bundle_root}" "${output_path}" || rc=$?
+
+  rm -rf "${tmp_dir}" "${stage_root}"
+  return "${rc}"
+}
+
 run_addon_install() {
   local tgz_path=""
   local addon_name=""
@@ -1212,6 +1298,41 @@ run_stack() {
       }
       with_stack_source_env "${PRODUCTIVE_K3S_ADDONS_REPO_DIR:-$(resolve_addons_repo_dir)}" "${stack_name}" "${SCRIPT_DIR}/apply.sh" --mode stack "$@"
       ;;
+    export)
+      local output_path=""
+      while (($# > 0)); do
+        case "$1" in
+          --tgz)
+            tgz_path="${2:-}"
+            shift 2
+            ;;
+          --output)
+            output_path="${2:-}"
+            shift 2
+            ;;
+          -*)
+            break
+            ;;
+          *)
+            if [[ -z "${stack_name}" ]]; then
+              stack_name="$1"
+              shift
+            else
+              break
+            fi
+            ;;
+        esac
+      done
+      [[ -n "${output_path}" ]] || {
+        printf 'Usage: ./productive-k3s-core.sh stack export --tgz <file> --output <dir|archive> [install args...]\n' >&2
+        return 2
+      }
+      [[ -n "${tgz_path}" ]] || {
+        printf 'Usage: ./productive-k3s-core.sh stack export --tgz <file> --output <dir|archive> [install args...]\n' >&2
+        return 2
+      }
+      run_stack_export_from_tgz "${tgz_path}" "${output_path}" "$@"
+      ;;
     validate)
       stack_name="${1:-}"
       [[ -n "${stack_name}" ]] || {
@@ -1240,7 +1361,7 @@ run_stack() {
       with_stack_source_env "${PRODUCTIVE_K3S_ADDONS_REPO_DIR:-$(resolve_addons_repo_dir)}" "${stack_name}" "${SCRIPT_DIR}/cleanup.sh" "$@"
       ;;
     *)
-      printf 'Usage: ./productive-k3s-core.sh stack <install|validate|backup|cleanup> ...\n' >&2
+      printf 'Usage: ./productive-k3s-core.sh stack <install|export|validate|backup|cleanup> ...\n' >&2
       return 2
       ;;
   esac

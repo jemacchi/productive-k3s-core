@@ -39,6 +39,16 @@ DEV_WRAPPER := ../scripts/productive-k3s-core-dev.sh
 	test-artifact-tools \
 	test-telemetry \
 	test-productive-k3s-core-cli \
+	test-stack-export-artifact \
+	test-exported-stack-installers-k3s \
+	test-exported-stack-installers-all \
+	test-exported-stack-installer-debian12 \
+	test-exported-stack-installer-k3s-ubuntu24 \
+	test-exported-stack-installer-k3s-ubuntu22 \
+	test-exported-stack-installer-k3s-debian12 \
+	test-exported-stack-installer-k3s-debian13 \
+	test-exported-stack-installer-rke2-ubuntu24 \
+	test-exported-stack-installer-k3sup-ubuntu24 \
 	test-in-vm-engine-propagation \
 	test-agent-smoke \
 	test-smoke \
@@ -173,6 +183,41 @@ test-telemetry:
 
 test-productive-k3s-core-cli:
 	bash $(DEV_WRAPPER) test-productive-k3s-core-cli
+
+test-stack-export-artifact:
+	bash ./test-stack-export-artifact.sh
+
+test-exported-stack-installers-k3s:
+	$(MAKE) test-exported-stack-installer-k3s-ubuntu24
+	$(MAKE) test-exported-stack-installer-k3s-ubuntu22
+	$(MAKE) test-exported-stack-installer-k3s-debian12
+	$(MAKE) test-exported-stack-installer-k3s-debian13
+
+test-exported-stack-installers-all:
+	$(MAKE) test-exported-stack-installers-k3s
+	$(MAKE) test-exported-stack-installer-rke2-ubuntu24
+	$(MAKE) test-exported-stack-installer-k3sup-ubuntu24
+
+test-exported-stack-installer-debian12:
+	bash ./test-exported-stack-installer-in-vm.sh
+
+test-exported-stack-installer-k3s-ubuntu24:
+	STACK_TEST_PLATFORM=ubuntu STACK_TEST_IMAGE=24.04 PRODUCTIVE_K3S_DISTRO=k3s PRODUCTIVE_K3S_ENGINE=native bash ./test-exported-stack-installer-in-vm.sh
+
+test-exported-stack-installer-k3s-ubuntu22:
+	STACK_TEST_PLATFORM=ubuntu STACK_TEST_IMAGE=22.04 PRODUCTIVE_K3S_DISTRO=k3s PRODUCTIVE_K3S_ENGINE=native bash ./test-exported-stack-installer-in-vm.sh
+
+test-exported-stack-installer-k3s-debian12:
+	STACK_TEST_PLATFORM=debian12 STACK_TEST_IMAGE=$(DEBIAN12_IMAGE) PRODUCTIVE_K3S_DISTRO=k3s PRODUCTIVE_K3S_ENGINE=native bash ./test-exported-stack-installer-in-vm.sh
+
+test-exported-stack-installer-k3s-debian13:
+	STACK_TEST_PLATFORM=debian13 STACK_TEST_IMAGE=$(DEBIAN13_IMAGE) PRODUCTIVE_K3S_DISTRO=k3s PRODUCTIVE_K3S_ENGINE=native bash ./test-exported-stack-installer-in-vm.sh
+
+test-exported-stack-installer-rke2-ubuntu24:
+	STACK_TEST_PLATFORM=ubuntu STACK_TEST_IMAGE=24.04 PRODUCTIVE_K3S_DISTRO=rke2 PRODUCTIVE_K3S_ENGINE=native bash ./test-exported-stack-installer-in-vm.sh
+
+test-exported-stack-installer-k3sup-ubuntu24:
+	STACK_TEST_PLATFORM=ubuntu STACK_TEST_IMAGE=24.04 PRODUCTIVE_K3S_DISTRO=k3s PRODUCTIVE_K3S_ENGINE=k3sup bash ./test-exported-stack-installer-in-vm.sh
 
 test-in-vm-engine-propagation:
 	bash $(DEV_WRAPPER) test-in-vm-engine-propagation
