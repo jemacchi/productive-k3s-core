@@ -170,6 +170,7 @@ The exported installer contract is intentionally narrow:
 
 - it does not require `productive-k3s-core`, `productive-k3s-cli`, or source checkouts on the target host
 - it may still require host prerequisites and network access
+  Typical examples are downloading `k3s` or `rke2`, resolving Helm charts and chart dependencies, and pulling container images.
 - it consumes packaged stack artifacts; catalog resolution belongs above `core`, not inside it
 
 Core's responsibility is intentionally narrow for add-on public exposure:
