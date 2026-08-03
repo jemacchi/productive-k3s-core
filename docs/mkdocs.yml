@@ -110,7 +110,7 @@ nav:
       - Documentación para usuarios:
           - es/user-docs/index.md
           - Preflight del host: es/user-docs/host-preflight.md
-          - Soporte ARM: es/user-docs/arm-support.md
+          - ARM Support: es/user-docs/arm-support.md
           - Verificaciones:
               - K3s: es/user-docs/k3s-checks.md
               - Ingress: es/user-docs/ingress-checks.md
