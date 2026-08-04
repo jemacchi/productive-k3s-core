@@ -144,6 +144,7 @@ Practical CLI examples:
 ```bash
 ./productive-k3s-core.sh apply
 ./productive-k3s-core.sh stack install base
+./productive-k3s-core.sh stack export --tgz ./base-stack.tgz --output ./base-installer.tgz
 ./productive-k3s-core.sh stack validate base --strict
 ./productive-k3s-core.sh addon install --tgz ./nginx-addon.tgz --public-host nginx-01.k3s.lab.internal
 ```
@@ -152,8 +153,25 @@ Contract summary:
 
 - `apply` installs the local core only
 - `stack install <name>` installs an explicit stack such as `base`
+- `stack export --tgz <artifact>` produces a self-contained installer bundle from a packaged stack artifact
 - `addon install` runs on the local host against the local cluster
 - packaged add-ons can still request a basic public ingress via `--public-host`
+
+Current exported-installer test coverage lives in [tests/README.md](./tests/README.md) and includes:
+
+- `k3s` on Ubuntu `24.04`
+- `k3s` on Ubuntu `22.04`
+- `k3s` on Debian `12`
+- `k3s` on Debian `13`
+- `rke2` on Ubuntu `24.04`
+- `k3sup` engine on Ubuntu `24.04`
+
+The exported installer contract is intentionally narrow:
+
+- it does not require `productive-k3s-core`, `productive-k3s-cli`, or source checkouts on the target host
+- it may still require host prerequisites and network access
+  Typical examples are downloading `k3s` or `rke2`, resolving Helm charts and chart dependencies, and pulling container images.
+- it consumes packaged stack artifacts; catalog resolution belongs above `core`, not inside it
 
 Core's responsibility is intentionally narrow for add-on public exposure:
 

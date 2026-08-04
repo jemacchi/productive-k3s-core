@@ -96,6 +96,42 @@ STACK_TGZ_URL=https://downloads.productive-k3s.io/addons/base-0.1.0.tgz make -C 
 STACK_TGZ_URL=https://downloads.productive-k3s.io/addons/base-0.1.0.tgz make -C tests test-stacks-rke2-ubuntu22
 ```
 
+Exported-installer VM checks are also available:
+
+```bash
+make -C tests test-exported-stack-installers-k3s
+make -C tests test-exported-stack-installers-all
+make -C tests test-exported-stack-installer-k3s-ubuntu24
+make -C tests test-exported-stack-installer-k3s-ubuntu22
+make -C tests test-exported-stack-installer-k3s-debian12
+make -C tests test-exported-stack-installer-k3s-debian13
+make -C tests test-exported-stack-installer-rke2-ubuntu24
+make -C tests test-exported-stack-installer-k3sup-ubuntu24
+```
+
+Semantics:
+
+- `test-exported-stack-installers-k3s` runs the self-contained exported installer across the supported `k3s` matrix:
+  - Ubuntu 24.04
+  - Ubuntu 22.04
+  - Debian 12
+  - Debian 13
+- `test-exported-stack-installers-all` runs the current exported-installer contract end-to-end:
+  - the full `k3s` matrix above
+  - `rke2` on Ubuntu 24.04
+  - `k3sup` engine on Ubuntu 24.04
+- downloads the published `base` stack artifact locally
+- exports it through `productive-k3s-core.sh stack export`
+- boots the selected VM platform with the `core` profile
+- removes the staged Productive K3S source checkouts from the VM
+- transfers the exported installer bundle and runs its `install.sh`
+
+Contract reminder:
+
+- the exported bundle is self-contained with respect to Productive K3S tooling and source repos
+- it is not promised to be fully offline
+- it still depends on host prerequisites and, when applicable, external network access for `k3s`/`rke2` downloads, Helm charts, chart dependencies, and container images
+
 From the repository root, keep only the three principal test entrypoints:
 
 ```bash

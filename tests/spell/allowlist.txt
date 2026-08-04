@@ -10,3 +10,4 @@ debian
 ubuntu
 mktemp
 sha256sum
+ro

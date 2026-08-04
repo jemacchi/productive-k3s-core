@@ -102,6 +102,7 @@ for required_path in \
   "productive-k3s-core-HEAD/LICENSE" \
   "productive-k3s-core-HEAD/scripts/productive-k3s-core.sh" \
   "productive-k3s-core-HEAD/scripts/addons-runtime.sh" \
+  "productive-k3s-core-HEAD/scripts/addon-host-runtime.sh" \
   "productive-k3s-core-HEAD/scripts/runtime-contract.sh" \
   "productive-k3s-core-HEAD/scripts/component-versions.sh" \
   "productive-k3s-core-HEAD/scripts/preflight-host.sh" \
@@ -374,10 +375,19 @@ STACK_VALIDATE_CAPTURE="${ADDON_TMP_DIR}/stack-validate.txt"
 STACK_CLEANUP_CAPTURE="${ADDON_TMP_DIR}/stack-cleanup.txt"
 mkdir -p "${STACK_DISPATCH_DIR}/scripts" "${STACK_ADDONS_DIR}/addons/nginx" "${STACK_ADDONS_DIR}/stacks/base"
 cp "${REPO_DIR}/productive-k3s-core.sh" "${STACK_DISPATCH_DIR}/"
+cp "${REPO_DIR}/LICENSE" "${STACK_DISPATCH_DIR}/"
+cp "${REPO_DIR}/README.md" "${STACK_DISPATCH_DIR}/"
 cp "${REPO_DIR}/scripts/productive-k3s-core.sh" "${STACK_DISPATCH_DIR}/scripts/"
 cp "${REPO_DIR}/scripts/component-versions.sh" "${STACK_DISPATCH_DIR}/scripts/"
 cp "${REPO_DIR}/scripts/addons-runtime.sh" "${STACK_DISPATCH_DIR}/scripts/"
+cp "${REPO_DIR}/scripts/addon-host-runtime.sh" "${STACK_DISPATCH_DIR}/scripts/"
 cp "${REPO_DIR}/scripts/runtime-contract.sh" "${STACK_DISPATCH_DIR}/scripts/"
+cp "${REPO_DIR}/scripts/export-runtime.sh" "${STACK_DISPATCH_DIR}/scripts/"
+cp "${REPO_DIR}/scripts/preflight-host.sh" "${STACK_DISPATCH_DIR}/scripts/"
+cp "${REPO_DIR}/scripts/backup.sh" "${STACK_DISPATCH_DIR}/scripts/"
+cp "${REPO_DIR}/scripts/rollback.sh" "${STACK_DISPATCH_DIR}/scripts/"
+cp "${REPO_DIR}/scripts/send-telemetry.sh" "${STACK_DISPATCH_DIR}/scripts/"
+cp "${REPO_DIR}/scripts/send-telemetry-event.sh" "${STACK_DISPATCH_DIR}/scripts/"
 cat > "${STACK_DISPATCH_DIR}/scripts/apply.sh" <<EOF
 #!/usr/bin/env bash
 printf 'stack=%s repo=%s bundled=%s args=%s\n' "\${PRODUCTIVE_K3S_STACK_NAME:-}" "\${PRODUCTIVE_K3S_ADDONS_REPO_DIR:-}" "\${PRODUCTIVE_K3S_STACK_BUNDLED_ADDONS_DIR:-}" "\$*" > "${STACK_APPLY_CAPTURE}"
@@ -456,6 +466,28 @@ grep -q "stack=observability" "${STACK_APPLY_CAPTURE}" || fail "stack tgz instal
 grep -q "repo=.*tmp" "${STACK_APPLY_CAPTURE}" || fail "stack tgz install without a source repo did not synthesize a temporary overlay repo"
 grep -q "bundled=.*bundled-addons" "${STACK_APPLY_CAPTURE}" || fail "stack tgz install without a source repo did not expose bundled addons"
 pass "stack tgz install works without a local addons source repo when bundled packages are present"
+
+STACK_EXPORT_DIR="${ADDON_TMP_DIR}/stack-export"
+(
+  cd "${STACK_DISPATCH_DIR}" &&
+  env -u PRODUCTIVE_K3S_ADDONS_REPO_DIR PRODUCTIVE_K3S_DISTRO=rke2 PRODUCTIVE_K3S_ENGINE=native TELEMETRY_ENABLED=false ./productive-k3s-core.sh stack export --tgz "${STACK_TGZ_ARCHIVE}" --output "${STACK_EXPORT_DIR}"
+)
+[[ -x "${STACK_EXPORT_DIR}/install.sh" ]] || fail "stack export did not emit install.sh"
+[[ -f "${STACK_EXPORT_DIR}/stack.tgz" ]] || fail "stack export did not emit stack.tgz"
+[[ -f "${STACK_EXPORT_DIR}/install-config.env" ]] || fail "stack export did not emit install-config.env"
+[[ -f "${STACK_EXPORT_DIR}/manifest.json" ]] || fail "stack export did not emit manifest.json"
+[[ -f "${STACK_EXPORT_DIR}/README.md" ]] || fail "stack export did not emit README.md"
+[[ -x "${STACK_EXPORT_DIR}/productive-k3s-core.sh" ]] || fail "stack export did not emit the runtime entrypoint"
+[[ -f "${STACK_EXPORT_DIR}/scripts/productive-k3s-core.sh" ]] || fail "stack export did not emit runtime scripts"
+tar -tzf "${STACK_EXPORT_DIR}/stack.tgz" | grep -q '^./stack.yaml$' || fail "stack export stack.tgz is missing stack.yaml"
+cmp -s "${STACK_TGZ_ARCHIVE}" "${STACK_EXPORT_DIR}/stack.tgz" || fail "stack export did not preserve the packaged stack artifact"
+grep -q 'stack install --tgz' "${STACK_EXPORT_DIR}/install.sh" || fail "stack export install.sh did not replay stack install"
+grep -q '"kind": "stack"' "${STACK_EXPORT_DIR}/manifest.json" || fail "stack export manifest did not describe the stack subject"
+grep -q '"artifact_name": "stack.tgz"' "${STACK_EXPORT_DIR}/manifest.json" || fail "stack export manifest did not record stack.tgz"
+grep -q "export PRODUCTIVE_K3S_DISTRO='rke2'" "${STACK_EXPORT_DIR}/install-config.env" || fail "stack export did not freeze PRODUCTIVE_K3S_DISTRO"
+grep -q "export PRODUCTIVE_K3S_ENGINE='native'" "${STACK_EXPORT_DIR}/install-config.env" || fail "stack export did not freeze PRODUCTIVE_K3S_ENGINE"
+grep -q "export TELEMETRY_ENABLED='false'" "${STACK_EXPORT_DIR}/install-config.env" || fail "stack export did not freeze TELEMETRY_ENABLED"
+pass "stack export emits a replayable bundle structure from tgz input"
 
 STACK_TGZ_K3S_ONLY_DIR="${ADDON_TMP_DIR}/stack-tgz-k3s-only"
 STACK_TGZ_K3S_ONLY_ARCHIVE="${ADDON_TMP_DIR}/k3s-only-stack.tgz"
