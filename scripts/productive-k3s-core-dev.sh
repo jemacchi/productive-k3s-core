@@ -83,10 +83,17 @@ default_addons_repo_url() {
   printf '%s\n' "${DEFAULT_GITHUB_REPO_BASE_URL}/productive-k3s-addons.git"
 }
 
+remote_branch_exists() {
+  local repo_url="$1"
+  local branch_name="$2"
+  git ls-remote --exit-code --heads "${repo_url}" "${branch_name}" >/dev/null 2>&1
+}
+
 default_addons_repo_ref() {
+  local repo_url="${1:-$(default_addons_repo_url)}"
   local branch_name=""
   branch_name="$(git -C "${REPO_DIR}" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
-  if [[ -n "${branch_name}" && "${branch_name}" != "HEAD" ]]; then
+  if [[ -n "${branch_name}" && "${branch_name}" != "HEAD" ]] && remote_branch_exists "${repo_url}" "${branch_name}"; then
     printf '%s\n' "${branch_name}"
     return 0
   fi
@@ -131,7 +138,7 @@ prepare_addons_repo_checkout() {
       "${TEMP_ADDONS_CLONE_DIR}/productive-k3s-addons/"
   else
     source_url="${PRODUCTIVE_K3S_ADDONS_REPO_URL:-$(default_addons_repo_url)}"
-    source_ref="${PRODUCTIVE_K3S_ADDONS_REPO_REF:-$(default_addons_repo_ref)}"
+    source_ref="${PRODUCTIVE_K3S_ADDONS_REPO_REF:-$(default_addons_repo_ref "${source_url}")}"
     log_addons_repo_source url "${source_url}" "${source_ref}"
     if ! git clone --depth 1 --branch "${source_ref}" \
       "${source_url}" \
