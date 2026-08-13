@@ -31,6 +31,8 @@ TRANSFER_STAGED_ADDONS_REPO=""
 ADDONS_REPO_DIR=""
 REMOTE_ADDONS_DIR=""
 REMOTE_COMMAND_STATUS=""
+REMOTE_COMMAND_LOG_REMOTE=""
+REMOTE_COMMAND_LOG_LOCAL=""
 VM_LAUNCH_TIMEOUT_SECONDS="${VM_LAUNCH_TIMEOUT_SECONDS:-}"
 VM_LAUNCH_RETRY_SLEEP_SECONDS="${VM_LAUNCH_RETRY_SLEEP_SECONDS:-15}"
 
@@ -305,7 +307,9 @@ write_local_artifact() {
   "repo_dir": "$(json_escape "$REPO_DIR")",
   "status": "$(json_escape "$ARTIFACT_STATUS")",
   "bootstrap_manifest_remote": "$(json_escape "$BOOTSTRAP_MANIFEST_REMOTE")",
-  "bootstrap_manifest_local": "$(json_escape "$BOOTSTRAP_MANIFEST_LOCAL")"
+  "bootstrap_manifest_local": "$(json_escape "$BOOTSTRAP_MANIFEST_LOCAL")",
+  "remote_command_log_remote": "$(json_escape "$REMOTE_COMMAND_LOG_REMOTE")",
+  "remote_command_log_local": "$(json_escape "$REMOTE_COMMAND_LOG_LOCAL")"
 }
 EOF
 }
@@ -470,6 +474,7 @@ run_remote_command_with_status() {
   remote_log="/tmp/pk3s-remote-cmd-${RUN_TIMESTAMP}-$$.log"
   remote_status="/tmp/pk3s-remote-cmd-${RUN_TIMESTAMP}-$$.status"
   remote_pid="/tmp/pk3s-remote-cmd-${RUN_TIMESTAMP}-$$.pid"
+  REMOTE_COMMAND_LOG_REMOTE="${remote_log}"
   command="${command}; remote_rc=\$?; printf '%s\\n' \"\${remote_rc}\" > '${remote_status}'; exit \"\${remote_rc}\""
   quoted_command="$(printf '%q' "$command")"
 
@@ -479,6 +484,18 @@ run_remote_command_with_status() {
   command_status="$(run_in_vm "cat '$remote_status' 2>/dev/null || true" | tr -d '\r\n')"
   REMOTE_COMMAND_STATUS="${command_status}"
   [[ "${command_status}" == "0" ]]
+}
+
+capture_remote_command_log() {
+  local local_target
+  [[ -n "${REMOTE_COMMAND_LOG_REMOTE:-}" ]] || return 0
+  local_target="${ARTIFACTS_DIR}/${ARTIFACT_BASENAME}-remote-command.log"
+  ensure_artifacts_dir
+  multipass transfer "$VM_NAME:$REMOTE_COMMAND_LOG_REMOTE" "$local_target" >/dev/null 2>&1 || return 0
+  if [[ -f "$local_target" ]]; then
+    REMOTE_COMMAND_LOG_LOCAL="$local_target"
+    log "Remote command log copied to: $REMOTE_COMMAND_LOG_LOCAL"
+  fi
 }
 
 bootstrap_engine_env_prefix() {
@@ -541,6 +558,7 @@ run_core_cli_with_answers() {
       err "Remote core CLI command exited with status ${REMOTE_COMMAND_STATUS}."
     fi
     capture_bootstrap_manifest
+    capture_remote_command_log
     return 1
   fi
   capture_bootstrap_manifest
