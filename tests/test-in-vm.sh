@@ -638,7 +638,12 @@ run_stack_validate_with_retries() {
 
 assert_in_vm() {
   local cmd="$1" description="$2"
-  if run_in_vm "$cmd"; then
+  if run_vm_command_with_status \
+    "$cmd" \
+    120 \
+    "Timed out waiting for verification completion marker: ${description}" \
+    "Verification command exited with status for: ${description}"
+  then
     log "Verified: $description"
   else
     err "Verification failed: $description"
@@ -654,7 +659,12 @@ assert_in_vm_with_retries() {
   start_ts=$(date +%s)
 
   while true; do
-    if run_in_vm "$cmd"; then
+    if run_vm_command_with_status \
+      "$cmd" \
+      120 \
+      "Timed out waiting for verification completion marker: ${description}" \
+      "Verification command exited with status for: ${description}"
+    then
       log "Verified: $description"
       return 0
     fi
