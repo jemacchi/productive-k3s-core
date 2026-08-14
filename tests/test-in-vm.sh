@@ -64,16 +64,20 @@ need_cmd() {
   command -v "$1" >/dev/null 2>&1
 }
 
+now_local() {
+  date +"%Y-%m-%d %H:%M:%S%z"
+}
+
 log() {
-  printf '[INFO] %s\n' "$1"
+  printf '[%s] [INFO] %s\n' "$(now_local)" "$1"
 }
 
 warn() {
-  printf '[WARN] %s\n' "$1"
+  printf '[%s] [WARN] %s\n' "$(now_local)" "$1"
 }
 
 err() {
-  printf '[ERROR] %s\n' "$1" >&2
+  printf '[%s] [ERROR] %s\n' "$(now_local)" "$1" >&2
 }
 
 default_image_for_platform() {
