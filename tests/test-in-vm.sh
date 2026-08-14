@@ -564,6 +564,23 @@ run_core_cli_with_answers() {
   capture_bootstrap_manifest
 }
 
+run_vm_command_with_status() {
+  local command="$1"
+  local timeout_secs="$2"
+  local timeout_description="$3"
+  local failure_description="$4"
+
+  if ! run_remote_command_with_status "$command" "$timeout_secs"; then
+    if [[ "${REMOTE_COMMAND_STATUS:-}" == "124" || -z "${REMOTE_COMMAND_STATUS:-}" ]]; then
+      err "${timeout_description}"
+    else
+      err "${failure_description} ${REMOTE_COMMAND_STATUS}."
+    fi
+    capture_remote_command_log
+    return 1
+  fi
+}
+
 run_validate_with_retries() {
   local validate_mode="${1:-strict}"
   local timeout_secs="${2:-600}"
@@ -730,10 +747,18 @@ run_full_rollback() {
   fi
 
   log "Running rollback plan inside the VM"
-  run_in_vm "cd '$REMOTE_DIR' && $(bootstrap_engine_env_prefix)./scripts/rollback.sh --to '$manifest' --plan"
+  run_vm_command_with_status \
+    "cd '$REMOTE_DIR' && $(bootstrap_engine_env_prefix)./scripts/rollback.sh --to '$manifest' --plan" \
+    1800 \
+    "Timed out waiting for rollback plan completion marker." \
+    "Rollback plan command exited with status"
 
   log "Applying rollback inside the VM"
-  run_in_vm "cd '$REMOTE_DIR' && $(bootstrap_engine_env_prefix)./scripts/rollback.sh --to '$manifest' --apply --yes"
+  run_vm_command_with_status \
+    "cd '$REMOTE_DIR' && $(bootstrap_engine_env_prefix)./scripts/rollback.sh --to '$manifest' --apply --yes" \
+    3600 \
+    "Timed out waiting for rollback apply completion marker." \
+    "Rollback apply command exited with status"
 
   assert_in_vm_with_retries "if [[ '${PRODUCTIVE_K3S_DISTRO:-k3s}' == 'rke2' ]]; then ! sudo /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml get namespace cert-manager >/dev/null 2>&1; else ! sudo k3s kubectl get namespace cert-manager >/dev/null 2>&1; fi" "cert-manager namespace was removed by rollback" 600 15
   assert_in_vm_with_retries "if [[ '${PRODUCTIVE_K3S_DISTRO:-k3s}' == 'rke2' ]]; then ! sudo /var/lib/rancher/rke2/bin/kubectl --kubeconfig /etc/rancher/rke2/rke2.yaml get namespace longhorn-system >/dev/null 2>&1; else ! sudo k3s kubectl get namespace longhorn-system >/dev/null 2>&1; fi" "longhorn-system namespace was removed by rollback" 600 15
