@@ -742,7 +742,11 @@ run_full() {
 run_full_clean() {
   run_full
   log "Running destructive clean profile inside the VM"
-  run_in_vm "cd '$REMOTE_DIR' && $(bootstrap_engine_env_prefix)./productive-k3s-core.sh stack cleanup base --apply --yes --confirm-clean"
+  run_vm_command_with_status \
+    "cd '$REMOTE_DIR' && $(bootstrap_engine_env_prefix)./productive-k3s-core.sh stack cleanup base --apply --yes --confirm-clean" \
+    3600 \
+    "Timed out waiting for stack cleanup completion marker." \
+    "Stack cleanup command exited with status"
   assert_in_vm "if [[ '${PRODUCTIVE_K3S_DISTRO:-k3s}' == 'rke2' ]]; then systemctl is-active --quiet rke2-server && exit 1 || exit 0; else systemctl is-active --quiet k3s && exit 1 || exit 0; fi" "cluster service is no longer active after clean"
 }
 
