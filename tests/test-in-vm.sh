@@ -679,9 +679,56 @@ assert_in_vm_with_retries() {
       return 1
     fi
 
-    log "Rollback verification is not clean yet; waiting ${sleep_secs}s before retrying"
+    log "Verification '${description}' is not clean yet; waiting ${sleep_secs}s before retrying"
     sleep "$sleep_secs"
   done
+}
+
+full_clean_verification_command() {
+  cat <<EOF
+source '$REMOTE_DIR/scripts/runtime-contract.sh'
+export PRODUCTIVE_K3S_DISTRO='${PRODUCTIVE_K3S_DISTRO:-k3s}'
+
+check_service_inactive() {
+  local unit="\$1"
+  local rc
+  [[ -n "\$unit" ]] || return 0
+
+  if command -v timeout >/dev/null 2>&1; then
+    timeout --kill-after=5s 10s systemctl is-active --quiet "\$unit" >/dev/null 2>&1
+    rc=\$?
+  else
+    systemctl is-active --quiet "\$unit" >/dev/null 2>&1
+    rc=\$?
+  fi
+
+  case "\$rc" in
+    0)
+      return 1
+      ;;
+    3|4)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+check_runtime_paths_absent() {
+  local runtime_path
+  while IFS= read -r runtime_path; do
+    [[ -n "\$runtime_path" ]] || continue
+    [[ ! -e "\$runtime_path" ]] || return 1
+  done < <(pk3s_runtime_state_dirs)
+
+  [[ ! -e "\$(pk3s_runtime_system_kubeconfig_path)" ]]
+}
+
+check_service_inactive "\$(pk3s_runtime_server_service)" &&
+check_service_inactive "\$(pk3s_runtime_agent_service)" &&
+check_runtime_paths_absent
+EOF
 }
 
 smoke_answers() {
@@ -751,7 +798,7 @@ run_full_clean() {
     3600 \
     "Timed out waiting for stack cleanup completion marker." \
     "Stack cleanup command exited with status"
-  assert_in_vm_with_retries "if [[ '${PRODUCTIVE_K3S_DISTRO:-k3s}' == 'rke2' ]]; then systemctl is-active --quiet rke2-server && exit 1 || exit 0; else systemctl is-active --quiet k3s && exit 1 || exit 0; fi" "cluster service is no longer active after clean" 600 15
+  assert_in_vm_with_retries "$(full_clean_verification_command)" "cluster runtime is fully removed after clean" 600 15
 }
 
 run_full_rollback() {
