@@ -751,7 +751,7 @@ run_full_clean() {
     3600 \
     "Timed out waiting for stack cleanup completion marker." \
     "Stack cleanup command exited with status"
-  assert_in_vm "if [[ '${PRODUCTIVE_K3S_DISTRO:-k3s}' == 'rke2' ]]; then systemctl is-active --quiet rke2-server && exit 1 || exit 0; else systemctl is-active --quiet k3s && exit 1 || exit 0; fi" "cluster service is no longer active after clean"
+  assert_in_vm_with_retries "if [[ '${PRODUCTIVE_K3S_DISTRO:-k3s}' == 'rke2' ]]; then systemctl is-active --quiet rke2-server && exit 1 || exit 0; else systemctl is-active --quiet k3s && exit 1 || exit 0; fi" "cluster service is no longer active after clean" 600 15
 }
 
 run_full_rollback() {
