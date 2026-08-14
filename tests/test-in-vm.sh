@@ -30,11 +30,14 @@ TRANSFER_STAGED_REPO=""
 TRANSFER_STAGED_ADDONS_REPO=""
 ADDONS_REPO_DIR=""
 REMOTE_ADDONS_DIR=""
+TEMP_ADDONS_CLONE_DIR=""
 REMOTE_COMMAND_STATUS=""
 REMOTE_COMMAND_LOG_REMOTE=""
 REMOTE_COMMAND_LOG_LOCAL=""
 VM_LAUNCH_TIMEOUT_SECONDS="${VM_LAUNCH_TIMEOUT_SECONDS:-}"
 VM_LAUNCH_RETRY_SLEEP_SECONDS="${VM_LAUNCH_RETRY_SLEEP_SECONDS:-15}"
+DEFAULT_GITHUB_OWNER="${PRODUCTIVE_K3S_GITHUB_OWNER:-productive-k3s}"
+DEFAULT_GITHUB_REPO_BASE_URL="${PRODUCTIVE_K3S_GITHUB_REPO_BASE_URL:-https://github.com/${DEFAULT_GITHUB_OWNER}}"
 
 usage() {
   cat <<'EOU'
@@ -141,6 +144,65 @@ resolve_addons_repo_dir() {
   return 1
 }
 
+default_addons_repo_url() {
+  printf '%s\n' "${DEFAULT_GITHUB_REPO_BASE_URL}/productive-k3s-addons.git"
+}
+
+remote_branch_exists() {
+  local repo_url="$1"
+  local branch_name="$2"
+  git ls-remote --exit-code --heads "${repo_url}" "${branch_name}" >/dev/null 2>&1
+}
+
+default_addons_repo_ref() {
+  local repo_url="${1:-$(default_addons_repo_url)}"
+  local branch_name=""
+  branch_name="$(git -C "${REPO_DIR}" rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+  if [[ -n "${branch_name}" && "${branch_name}" != "HEAD" ]] && remote_branch_exists "${repo_url}" "${branch_name}"; then
+    printf '%s\n' "${branch_name}"
+    return 0
+  fi
+  printf '%s\n' "main"
+}
+
+profile_requires_addons_repo() {
+  case "$PROFILE" in
+    full|full-clean|full-rollback)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+prepare_addons_repo_dir() {
+  local resolved_dir=""
+  local source_url=""
+  local source_ref=""
+
+  if ! profile_requires_addons_repo; then
+    return 0
+  fi
+
+  if resolved_dir="$(resolve_addons_repo_dir)"; then
+    printf '%s\n' "${resolved_dir}"
+    return 0
+  fi
+
+  source_url="${PRODUCTIVE_K3S_ADDONS_REPO_URL:-$(default_addons_repo_url)}"
+  source_ref="${PRODUCTIVE_K3S_ADDONS_REPO_REF:-$(default_addons_repo_ref "${source_url}")}"
+  log "VM tests cloning productive-k3s-addons from URL: ${source_url} (ref: ${source_ref})" >&2
+
+  TEMP_ADDONS_CLONE_DIR="$(mktemp -d)"
+  if ! git clone --depth 1 --branch "${source_ref}" "${source_url}" "${TEMP_ADDONS_CLONE_DIR}/productive-k3s-addons" >/dev/null 2>&1; then
+    err "Failed to clone productive-k3s-addons from ${source_url} (ref: ${source_ref})"
+    return 1
+  fi
+
+  printf '%s\n' "${TEMP_ADDONS_CLONE_DIR}/productive-k3s-addons"
+}
+
 apply_platform_defaults() {
   case "$PLATFORM" in
     ubuntu|debian12|debian13) ;;
@@ -166,6 +228,10 @@ apply_platform_defaults() {
 }
 
 cleanup() {
+  if [[ -n "$TEMP_ADDONS_CLONE_DIR" && -d "$TEMP_ADDONS_CLONE_DIR" ]]; then
+    rm -rf "$TEMP_ADDONS_CLONE_DIR"
+    TEMP_ADDONS_CLONE_DIR=""
+  fi
   if [[ -n "$TRANSFER_STAGING_ROOT" && -d "$TRANSFER_STAGING_ROOT" ]]; then
     rm -rf "$TRANSFER_STAGING_ROOT"
     TRANSFER_STAGING_ROOT=""
@@ -837,7 +903,7 @@ run_full_rollback() {
 main() {
   parse_args "$@"
   need_cmd multipass || { err "multipass is required"; exit 1; }
-  ADDONS_REPO_DIR="$(resolve_addons_repo_dir || true)"
+  ADDONS_REPO_DIR="$(prepare_addons_repo_dir || true)"
   ensure_artifacts_dir
   trap cleanup EXIT
 
