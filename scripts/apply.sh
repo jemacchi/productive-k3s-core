@@ -202,6 +202,10 @@ mode_runs_base() {
   [[ "$MODE" == "single-node" || "$MODE" == "server" ]]
 }
 
+mode_allows_helm_install() {
+  [[ "$MODE" == "single-node" || "$MODE" == "server" || "$MODE" == "stack" ]]
+}
+
 mode_runs_stack() {
   [[ "$MODE" == "single-node" || "$MODE" == "stack" ]]
 }
@@ -2365,12 +2369,23 @@ main() {
       err "Mode '${MODE}' requires an existing $(pk3s_runtime_cluster_label) cluster."
       exit 1
     fi
-    if ! need_cmd helm; then
+    if mode_allows_helm_install; then
+      if need_cmd helm; then
+        prompt_yesno CONTINUE_HELM "y" "Helm is already installed. Continue using it without changes? [required]"
+        [[ "$CONTINUE_HELM" == "y" ]] || { err "Helm is required for chart-based installs."; exit 1; }
+        HELM_ACTION="reuse"
+      else
+        prompt_yesno INSTALL_HELM "y" "Helm was not detected. Install it now? [required]"
+        [[ "$INSTALL_HELM" == "y" ]] || { err "Cannot continue without Helm."; exit 1; }
+        HELM_ACTION="install"
+      fi
+    elif ! need_cmd helm; then
       err "Mode '${MODE}' requires Helm to be installed already."
       exit 1
+    else
+      HELM_ACTION="reuse"
     fi
     K3S_ACTION="reuse"
-    HELM_ACTION="reuse"
   fi
 
   local addon_config_file
@@ -2581,7 +2596,12 @@ main() {
     "$NFS_ACTION"
   print_stack_addon_impacts
 
-  prompt_yesno PROCEED_WITH_PLAN "y" "Proceed with this plan?"
+  if is_truthy "${PRODUCTIVE_K3S_AUTO_APPROVE_APPLY_PLAN:-false}"; then
+    PROCEED_WITH_PLAN="y"
+    log "Auto-approving apply plan from PRODUCTIVE_K3S_AUTO_APPROVE_APPLY_PLAN=true"
+  else
+    prompt_yesno PROCEED_WITH_PLAN "y" "Proceed with this plan?"
+  fi
   rm -f "${addon_config_file}"
   [[ "$PROCEED_WITH_PLAN" == "y" ]] || { RUN_STATUS="cancelled"; warn "Apply cancelled before applying changes."; exit 0; }
   exec </dev/null
