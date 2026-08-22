@@ -54,7 +54,7 @@ When telemetry is enabled, it remains:
 Core emits two telemetry families:
 
 - bootstrap manifest delivery through `scripts/send-telemetry.sh`
-- command and bootstrap lifecycle events such as `core.command.started`, `core.command.completed`, `core.apply.server.started`, and `core.apply.server.completed`
+- command and bootstrap lifecycle events such as `core.command.started`, `core.command.completed`, `core.bootstrap.server.started`, and `core.bootstrap.server.completed`
 
 Examples of safe event categories:
 

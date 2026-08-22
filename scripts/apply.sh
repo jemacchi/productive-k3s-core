@@ -155,7 +155,7 @@ emit_bootstrap_lifecycle_event() {
     return 0
   fi
 
-  event_name="core.apply.$(bootstrap_event_mode_name).${phase}"
+  event_name="core.bootstrap.$(bootstrap_event_mode_name).${phase}"
   event_file="$(mktemp)"
   {
     printf '{\n'
