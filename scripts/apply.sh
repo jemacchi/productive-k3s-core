@@ -1914,6 +1914,10 @@ ensure_cert_manager() {
       err "Addon source for cert-manager is required but scripts/install.sh was not found."
       exit 1
     fi
+    if [[ "${DRY_RUN}" == "1" ]]; then
+      log "[dry-run] Would install cert-manager from addon source..."
+      manifest_complete_component "cert_manager" "$(result_for_mode installed)"
+    else
     log "Installing cert-manager from addon source..."
     if ! PK3S_KUBECTL_MODE="$(pk3s_runtime_addon_kubectl_mode)" \
       PK3S_KUBECTL_BIN="$(pk3s_runtime_addon_kubectl_bin)" \
@@ -1929,6 +1933,7 @@ ensure_cert_manager() {
       exit 1
     fi
     manifest_complete_component "cert_manager" "$(result_for_mode installed)"
+    fi
   fi
 
   case "${issuer_action}" in
@@ -1975,6 +1980,12 @@ install_longhorn_if_needed() {
   if ! addon_source_script_exists longhorn install.sh; then
     err "Addon source for longhorn is required but scripts/install.sh was not found."
     exit 1
+  fi
+  if [[ "${DRY_RUN}" == "1" ]]; then
+    log "[dry-run] Would install Longhorn from addon source..."
+    manifest_complete_component "longhorn" "$(result_for_mode installed)"
+    manifest_complete_component "longhorn_host_prep" "$(result_for_mode configured)" "${longhorn_data_path}"
+    return
   fi
   log "Installing Longhorn from addon source..."
   if ! PK3S_KUBECTL_MODE="$(pk3s_runtime_addon_kubectl_mode)" \
@@ -2025,6 +2036,11 @@ install_rancher_if_needed() {
   if ! addon_source_script_exists rancher install.sh; then
     err "Addon source for rancher is required but scripts/install.sh was not found."
     exit 1
+  fi
+  if [[ "${DRY_RUN}" == "1" ]]; then
+    log "[dry-run] Would install Rancher from addon source..."
+    manifest_complete_component "rancher" "$(result_for_mode installed)"
+    return
   fi
   log "Installing Rancher from addon source..."
   if ! PK3S_KUBECTL_MODE="$(pk3s_runtime_addon_kubectl_mode)" \
@@ -2081,6 +2097,11 @@ install_registry_if_needed() {
   if ! addon_source_script_exists registry install.sh; then
     err "Addon source for registry is required but scripts/install.sh was not found."
     exit 1
+  fi
+  if [[ "${DRY_RUN}" == "1" ]]; then
+    log "[dry-run] Would install Registry from addon source..."
+    manifest_complete_component "registry" "$(result_for_mode installed)"
+    return
   fi
   log "Installing Registry from addon source..."
   if ! PK3S_KUBECTL_MODE="$(pk3s_runtime_addon_kubectl_mode)" \
