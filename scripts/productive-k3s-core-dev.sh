@@ -3,9 +3,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+VM_IMAGES_ENV="${REPO_DIR}/tests/vm-images.env"
 TEMP_ADDONS_CLONE_DIR=""
 DEFAULT_GITHUB_OWNER="${PRODUCTIVE_K3S_GITHUB_OWNER:-productive-k3s}"
 DEFAULT_GITHUB_REPO_BASE_URL="${PRODUCTIVE_K3S_GITHUB_REPO_BASE_URL:-https://github.com/${DEFAULT_GITHUB_OWNER}}"
+
+# shellcheck disable=SC1090
+source "${VM_IMAGES_ENV}"
 
 usage() {
   cat <<'EOF'
@@ -215,15 +219,15 @@ run_stack_artifact_test() {
 }
 
 run_stack_artifact_matrix_k3s() {
-  run_stack_artifact_test k3s ubuntu 24.04 "$@" || return $?
-  run_stack_artifact_test k3s ubuntu 22.04 "$@" || return $?
-  run_stack_artifact_test k3s debian13 https://cloud.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2 "$@" || return $?
-  run_stack_artifact_test k3s debian12 https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2 "$@"
+  run_stack_artifact_test k3s ubuntu "${UBUNTU_24_04_IMAGE}" "$@" || return $?
+  run_stack_artifact_test k3s ubuntu "${UBUNTU_22_04_IMAGE}" "$@" || return $?
+  run_stack_artifact_test k3s debian13 "${DEBIAN_13_IMAGE}" "$@" || return $?
+  run_stack_artifact_test k3s debian12 "${DEBIAN_12_IMAGE}" "$@"
 }
 
 run_stack_artifact_matrix_rke2() {
-  run_stack_artifact_test rke2 ubuntu 24.04 "$@" || return $?
-  run_stack_artifact_test rke2 ubuntu 22.04 "$@"
+  run_stack_artifact_test rke2 ubuntu "${UBUNTU_24_04_IMAGE}" "$@" || return $?
+  run_stack_artifact_test rke2 ubuntu "${UBUNTU_22_04_IMAGE}" "$@"
 }
 
 main() {
@@ -341,27 +345,27 @@ main() {
       ;;
     test-stacks-k3s-ubuntu24)
       shift
-      exec env PRODUCTIVE_K3S_DISTRO=k3s STACK_TEST_PLATFORM=ubuntu STACK_TEST_IMAGE=24.04 bash "${REPO_DIR}/tests/test-stack-artifact-in-vm.sh" "$@"
+      exec env PRODUCTIVE_K3S_DISTRO=k3s STACK_TEST_PLATFORM=ubuntu STACK_TEST_IMAGE="${UBUNTU_24_04_IMAGE}" bash "${REPO_DIR}/tests/test-stack-artifact-in-vm.sh" "$@"
       ;;
     test-stacks-k3s-ubuntu22)
       shift
-      exec env PRODUCTIVE_K3S_DISTRO=k3s STACK_TEST_PLATFORM=ubuntu STACK_TEST_IMAGE=22.04 bash "${REPO_DIR}/tests/test-stack-artifact-in-vm.sh" "$@"
+      exec env PRODUCTIVE_K3S_DISTRO=k3s STACK_TEST_PLATFORM=ubuntu STACK_TEST_IMAGE="${UBUNTU_22_04_IMAGE}" bash "${REPO_DIR}/tests/test-stack-artifact-in-vm.sh" "$@"
       ;;
     test-stacks-k3s-debian13)
       shift
-      exec env PRODUCTIVE_K3S_DISTRO=k3s STACK_TEST_PLATFORM=debian13 STACK_TEST_IMAGE=https://cloud.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2 bash "${REPO_DIR}/tests/test-stack-artifact-in-vm.sh" "$@"
+      exec env PRODUCTIVE_K3S_DISTRO=k3s STACK_TEST_PLATFORM=debian13 STACK_TEST_IMAGE="${DEBIAN_13_IMAGE}" bash "${REPO_DIR}/tests/test-stack-artifact-in-vm.sh" "$@"
       ;;
     test-stacks-k3s-debian12)
       shift
-      exec env PRODUCTIVE_K3S_DISTRO=k3s STACK_TEST_PLATFORM=debian12 STACK_TEST_IMAGE=https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2 bash "${REPO_DIR}/tests/test-stack-artifact-in-vm.sh" "$@"
+      exec env PRODUCTIVE_K3S_DISTRO=k3s STACK_TEST_PLATFORM=debian12 STACK_TEST_IMAGE="${DEBIAN_12_IMAGE}" bash "${REPO_DIR}/tests/test-stack-artifact-in-vm.sh" "$@"
       ;;
     test-stacks-rke2-ubuntu24)
       shift
-      exec env PRODUCTIVE_K3S_DISTRO=rke2 STACK_TEST_PLATFORM=ubuntu STACK_TEST_IMAGE=24.04 bash "${REPO_DIR}/tests/test-stack-artifact-in-vm.sh" "$@"
+      exec env PRODUCTIVE_K3S_DISTRO=rke2 STACK_TEST_PLATFORM=ubuntu STACK_TEST_IMAGE="${UBUNTU_24_04_IMAGE}" bash "${REPO_DIR}/tests/test-stack-artifact-in-vm.sh" "$@"
       ;;
     test-stacks-rke2-ubuntu22)
       shift
-      exec env PRODUCTIVE_K3S_DISTRO=rke2 STACK_TEST_PLATFORM=ubuntu STACK_TEST_IMAGE=22.04 bash "${REPO_DIR}/tests/test-stack-artifact-in-vm.sh" "$@"
+      exec env PRODUCTIVE_K3S_DISTRO=rke2 STACK_TEST_PLATFORM=ubuntu STACK_TEST_IMAGE="${UBUNTU_22_04_IMAGE}" bash "${REPO_DIR}/tests/test-stack-artifact-in-vm.sh" "$@"
       ;;
     test-preflight-host)
       shift
@@ -407,50 +411,50 @@ main() {
     test-core)
       shift
       prepare_addons_repo_checkout
-      exec "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image 24.04 --profile core "$@"
+      exec "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image "${UBUNTU_24_04_IMAGE}" --profile core "$@"
       ;;
     test-rke2-core)
       shift
       prepare_addons_repo_checkout
-      exec env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image 24.04 --profile core "$@"
+      exec env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image "${UBUNTU_24_04_IMAGE}" --profile core "$@"
       ;;
     test-rke2-core-ubuntu22)
       shift
       prepare_addons_repo_checkout
-      exec env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image 22.04 --profile core "$@"
+      exec env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image "${UBUNTU_22_04_IMAGE}" --profile core "$@"
       ;;
     test-rke2-full)
       shift
       prepare_addons_repo_checkout
-      exec env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image 24.04 --profile full "$@"
+      exec env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image "${UBUNTU_24_04_IMAGE}" --profile full "$@"
       ;;
     test-rke2-full-clean)
       shift
       prepare_addons_repo_checkout
-      exec env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image 24.04 --profile full-clean "$@"
+      exec env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image "${UBUNTU_24_04_IMAGE}" --profile full-clean "$@"
       ;;
     test-rke2-full-rollback)
       shift
       prepare_addons_repo_checkout
-      exec env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image 24.04 --profile full-rollback "$@"
+      exec env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image "${UBUNTU_24_04_IMAGE}" --profile full-rollback "$@"
       ;;
     test-rke2-ubuntu-all)
       shift
       prepare_addons_repo_checkout
-      env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image 24.04 --profile core "$@" || exit $?
-      env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image 24.04 --profile full "$@" || exit $?
-      env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image 24.04 --profile full-clean "$@" || exit $?
-      exec env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image 24.04 --profile full-rollback "$@"
+      env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image "${UBUNTU_24_04_IMAGE}" --profile core "$@" || exit $?
+      env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image "${UBUNTU_24_04_IMAGE}" --profile full "$@" || exit $?
+      env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image "${UBUNTU_24_04_IMAGE}" --profile full-clean "$@" || exit $?
+      exec env PRODUCTIVE_K3S_DISTRO=rke2 "${REPO_DIR}/tests/test-in-vm.sh" --platform ubuntu --image "${UBUNTU_24_04_IMAGE}" --profile full-rollback "$@"
       ;;
     test-core-debian12)
       shift
       prepare_addons_repo_checkout
-      exec "${REPO_DIR}/tests/test-in-vm.sh" --platform debian12 --image https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2 --profile core "$@"
+      exec "${REPO_DIR}/tests/test-in-vm.sh" --platform debian12 --image "${DEBIAN_12_IMAGE}" --profile core "$@"
       ;;
     test-core-debian13)
       shift
       prepare_addons_repo_checkout
-      exec "${REPO_DIR}/tests/test-in-vm.sh" --platform debian13 --image https://cloud.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2 --profile core "$@"
+      exec "${REPO_DIR}/tests/test-in-vm.sh" --platform debian13 --image "${DEBIAN_13_IMAGE}" --profile core "$@"
       ;;
     test-matrix-smoke)
       shift

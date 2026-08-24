@@ -4,9 +4,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ARTIFACTS_DIR="${TEST_ARTIFACTS_DIR:-${REPO_DIR}/test-artifacts}"
+VM_IMAGES_ENV="${SCRIPT_DIR}/vm-images.env"
 
 PROFILE=""
 declare -a EXPECTED=()
+
+# shellcheck disable=SC1090
+source "${VM_IMAGES_ENV}"
 
 usage() {
   cat <<'EOF'
@@ -16,10 +20,10 @@ Usage:
 Example:
   ./tests/check-test-artifacts.sh \
     --profile smoke \
-    --expect 'ubuntu|24.04' \
-    --expect 'ubuntu|22.04' \
-    --expect 'debian12|https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2' \
-    --expect 'debian13|https://cloud.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2'
+    --expect "ubuntu|${UBUNTU_24_04_IMAGE}" \
+    --expect "ubuntu|${UBUNTU_22_04_IMAGE}" \
+    --expect "debian12|${DEBIAN_12_IMAGE}" \
+    --expect "debian13|${DEBIAN_13_IMAGE}"
 EOF
 }
 

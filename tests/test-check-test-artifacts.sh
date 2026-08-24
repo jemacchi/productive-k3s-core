@@ -3,8 +3,12 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+VM_IMAGES_ENV="${SCRIPT_DIR}/vm-images.env"
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT
+
+# shellcheck disable=SC1090
+source "${VM_IMAGES_ENV}"
 
 ARTIFACTS_DIR="${TMP_DIR}/test-artifacts"
 mkdir -p "${ARTIFACTS_DIR}"
@@ -20,23 +24,23 @@ assert_contains() {
   printf '%s' "$haystack" | grep -F "$needle" >/dev/null || fail "expected output to contain: $needle"
 }
 
-cat > "${ARTIFACTS_DIR}/test-in-vm-20260812-000001-smoke-ubuntu.json" <<'EOF'
+cat > "${ARTIFACTS_DIR}/test-in-vm-20260812-000001-smoke-ubuntu.json" <<EOF
 {
   "test_type": "vm",
   "profile": "smoke",
   "platform": "ubuntu",
-  "image": "24.04",
+  "image": "${UBUNTU_24_04_IMAGE}",
   "status": "success",
   "bootstrap_manifest_local": ""
 }
 EOF
 
-cat > "${ARTIFACTS_DIR}/test-in-vm-20260812-000001-core-ubuntu.json" <<'EOF'
+cat > "${ARTIFACTS_DIR}/test-in-vm-20260812-000001-core-ubuntu.json" <<EOF
 {
   "test_type": "vm",
   "profile": "core",
   "platform": "ubuntu",
-  "image": "24.04",
+  "image": "${UBUNTU_24_04_IMAGE}",
   "status": "success",
   "bootstrap_manifest_local": "/tmp/test-in-vm-20260812-000001-core-ubuntu-apply-manifest.json"
 }
@@ -45,7 +49,7 @@ EOF
 set +e
 smoke_output="$(
   TEST_ARTIFACTS_DIR="${ARTIFACTS_DIR}" \
-  bash "${REPO_DIR}/tests/check-test-artifacts.sh" --profile smoke --expect 'ubuntu|24.04' 2>&1
+  bash "${REPO_DIR}/tests/check-test-artifacts.sh" --profile smoke --expect "ubuntu|${UBUNTU_24_04_IMAGE}" 2>&1
 )"
 smoke_rc=$?
 set -e
@@ -55,7 +59,7 @@ assert_contains "${smoke_output}" "Artifact and bootstrap manifest validation pa
 set +e
 core_output="$(
   TEST_ARTIFACTS_DIR="${ARTIFACTS_DIR}" \
-  bash "${REPO_DIR}/tests/check-test-artifacts.sh" --profile core --expect 'ubuntu|24.04' 2>&1
+  bash "${REPO_DIR}/tests/check-test-artifacts.sh" --profile core --expect "ubuntu|${UBUNTU_24_04_IMAGE}" 2>&1
 )"
 core_rc=$?
 set -e

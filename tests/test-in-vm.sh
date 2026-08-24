@@ -4,6 +4,10 @@ set -euo pipefail
 PROFILE="core"
 PLATFORM="ubuntu"
 VM_IMAGE=""
+VM_IMAGE_REQUESTED=""
+VM_IMAGE_RESOLVED=""
+VM_IMAGE_VERSION=""
+VM_IMAGE_LABEL=""
 VM_CPUS="4"
 VM_MEMORY="8G"
 VM_DISK="40G"
@@ -16,6 +20,7 @@ REMOTE_DIR=""
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 REPO_NAME="$(basename "$REPO_DIR")"
+VM_IMAGES_ENV="${SCRIPT_DIR}/vm-images.env"
 VM_CREATED="n"
 ARTIFACTS_DIR="$REPO_DIR/test-artifacts"
 RUN_TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
@@ -39,6 +44,9 @@ VM_LAUNCH_RETRY_SLEEP_SECONDS="${VM_LAUNCH_RETRY_SLEEP_SECONDS:-15}"
 DEFAULT_GITHUB_OWNER="${PRODUCTIVE_K3S_GITHUB_OWNER:-productive-k3s}"
 DEFAULT_GITHUB_REPO_BASE_URL="${PRODUCTIVE_K3S_GITHUB_REPO_BASE_URL:-https://github.com/${DEFAULT_GITHUB_OWNER}}"
 
+# shellcheck disable=SC1090
+source "${VM_IMAGES_ENV}"
+
 usage() {
   cat <<'EOU'
 Usage:
@@ -52,9 +60,9 @@ Profiles:
   full-rollback  Run the full profile and then build/apply a rollback from the generated bootstrap manifest
 
 Platforms:
-  ubuntu         Supported baseline. Defaults to image 24.04 and user ubuntu
-  debian12       Supported path. Defaults to Debian 12 bookworm cloud image and user ubuntu
-  debian13       Supported path. Defaults to Debian 13 trixie cloud image and user ubuntu
+  ubuntu         Supported baseline. Defaults to the pinned Ubuntu 24.04 cloud image and user ubuntu
+  debian12       Supported path. Defaults to the pinned Debian 12 bookworm cloud image and user ubuntu
+  debian13       Supported path. Defaults to the pinned Debian 13 trixie cloud image and user ubuntu
 
 Notes:
   - Requires Multipass on the host.
@@ -86,13 +94,13 @@ err() {
 default_image_for_platform() {
   case "$1" in
     ubuntu)
-      printf '24.04'
+      printf '%s' "${UBUNTU_24_04_IMAGE}"
       ;;
     debian12)
-      printf 'https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2'
+      printf '%s' "${DEBIAN_12_IMAGE}"
       ;;
     debian13)
-      printf 'https://cloud.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2'
+      printf '%s' "${DEBIAN_13_IMAGE}"
       ;;
     *)
       return 1
@@ -126,6 +134,37 @@ default_launch_timeout_for_image() {
       printf '300'
       ;;
   esac
+}
+
+resolve_vm_image_metadata() {
+  VM_IMAGE_RESOLVED="${VM_IMAGE}"
+  VM_IMAGE_VERSION=""
+  VM_IMAGE_LABEL=""
+
+  case "${PLATFORM}|${VM_IMAGE}" in
+    "ubuntu|24.04"|"ubuntu|${UBUNTU_24_04_IMAGE}")
+      VM_IMAGE_RESOLVED="${UBUNTU_24_04_IMAGE}"
+      VM_IMAGE_VERSION="${UBUNTU_24_04_IMAGE_VERSION}"
+      VM_IMAGE_LABEL="${UBUNTU_24_04_IMAGE_LABEL}"
+      ;;
+    "ubuntu|22.04"|"ubuntu|${UBUNTU_22_04_IMAGE}")
+      VM_IMAGE_RESOLVED="${UBUNTU_22_04_IMAGE}"
+      VM_IMAGE_VERSION="${UBUNTU_22_04_IMAGE_VERSION}"
+      VM_IMAGE_LABEL="${UBUNTU_22_04_IMAGE_LABEL}"
+      ;;
+    "debian12|https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2"|"debian12|${DEBIAN_12_IMAGE}")
+      VM_IMAGE_RESOLVED="${DEBIAN_12_IMAGE}"
+      VM_IMAGE_VERSION="${DEBIAN_12_IMAGE_VERSION}"
+      VM_IMAGE_LABEL="${DEBIAN_12_IMAGE_LABEL}"
+      ;;
+    "debian13|https://cloud.debian.org/images/cloud/trixie/latest/debian-13-generic-amd64.qcow2"|"debian13|${DEBIAN_13_IMAGE}")
+      VM_IMAGE_RESOLVED="${DEBIAN_13_IMAGE}"
+      VM_IMAGE_VERSION="${DEBIAN_13_IMAGE_VERSION}"
+      VM_IMAGE_LABEL="${DEBIAN_13_IMAGE_LABEL}"
+      ;;
+  esac
+
+  VM_IMAGE="${VM_IMAGE_RESOLVED}"
 }
 
 resolve_addons_repo_dir() {
@@ -216,6 +255,8 @@ apply_platform_defaults() {
   if [[ -z "$VM_IMAGE" ]]; then
     VM_IMAGE="$(default_image_for_platform "$PLATFORM")"
   fi
+  VM_IMAGE_REQUESTED="${VM_IMAGE}"
+  resolve_vm_image_metadata
   if [[ -z "$REMOTE_USER" ]]; then
     REMOTE_USER="$(default_remote_user_for_platform "$PLATFORM")"
   fi
@@ -369,6 +410,10 @@ write_local_artifact() {
   "keep_vm": "$(json_escape "$KEEP_VM")",
   "purge_on_cleanup": "$(json_escape "$PURGE_ON_CLEANUP")",
   "image": "$(json_escape "$VM_IMAGE")",
+  "image_requested": "$(json_escape "$VM_IMAGE_REQUESTED")",
+  "image_resolved": "$(json_escape "$VM_IMAGE_RESOLVED")",
+  "image_version": "$(json_escape "$VM_IMAGE_VERSION")",
+  "image_label": "$(json_escape "$VM_IMAGE_LABEL")",
   "remote_user": "$(json_escape "$REMOTE_USER")",
   "remote_dir": "$(json_escape "$REMOTE_DIR")",
   "cpus": "$(json_escape "$VM_CPUS")",
@@ -397,6 +442,10 @@ write_public_artifact() {
   "keep_vm": "$(json_escape "$KEEP_VM")",
   "purge_on_cleanup": "$(json_escape "$PURGE_ON_CLEANUP")",
   "image": "$(json_escape "$VM_IMAGE")",
+  "image_requested": "$(json_escape "$VM_IMAGE_REQUESTED")",
+  "image_resolved": "$(json_escape "$VM_IMAGE_RESOLVED")",
+  "image_version": "$(json_escape "$VM_IMAGE_VERSION")",
+  "image_label": "$(json_escape "$VM_IMAGE_LABEL")",
   "cpus": "$(json_escape "$VM_CPUS")",
   "memory": "$(json_escape "$VM_MEMORY")",
   "disk": "$(json_escape "$VM_DISK")",
