@@ -154,7 +154,7 @@ Contract summary:
 - `apply` installs the local core only
 - `stack install <name>` installs an explicit stack such as `base`
 - `stack export --tgz <artifact>` produces a self-contained installer bundle from a packaged stack artifact
-- `addon install` runs on the local host against the local cluster
+- `addon install --tgz <artifact>` runs on the local host against the local cluster
 - packaged add-ons can still request a basic public ingress via `--public-host`
 
 Current exported-installer test coverage lives in [tests/README.md](./tests/README.md) and includes:

@@ -71,7 +71,7 @@ La separación pública importante ahora es:
   instala sólo el core local
 - `./productive-k3s-core.sh stack install <name>`
   instala un stack explícito como `base`
-- `./productive-k3s-core.sh addon install`
+- `./productive-k3s-core.sh addon install --tgz <artifact>`
   opera sobre el host local y el clúster local, no sobre un target externo vía kubeconfig
 
 ### Variables de entorno relacionadas con telemetría

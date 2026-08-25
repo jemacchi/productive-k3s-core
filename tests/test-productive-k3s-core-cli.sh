@@ -570,13 +570,14 @@ fi
 grep -q "Bundled addon package not found" /tmp/productive-k3s-core-stack-bundled.out || fail "missing bundled addon validation message"
 pass "stack tgz install rejects missing bundled addon packages"
 
-(
+if (
   cd "${STACK_DISPATCH_DIR}" &&
-  PRODUCTIVE_K3S_ADDONS_REPO_DIR="${STACK_ADDONS_DIR}" ./productive-k3s-core.sh addon install nginx --dry-run
-)
-grep -q "stack=addon-nginx" "${STACK_APPLY_CAPTURE}" || fail "addon install by source name did not synthesize a stack wrapper"
-grep -q -- "--mode stack --dry-run" "${STACK_APPLY_CAPTURE}" || fail "addon install by source name did not invoke apply in stack mode"
-pass "addon install by source name dispatches through a temporary stack wrapper"
+  PRODUCTIVE_K3S_ADDONS_REPO_DIR="${STACK_ADDONS_DIR}" ./productive-k3s-core.sh addon install nginx --dry-run >/tmp/productive-k3s-core-addon-source-name.out 2>&1
+); then
+  fail "addon install by source name unexpectedly succeeded"
+fi
+grep -q "source-name addon install is no longer part of the public core contract" /tmp/productive-k3s-core-addon-source-name.out || fail "addon install by source name rejection message missing"
+pass "addon install by source name is rejected from the public core contract"
 
 (
   cd "${STACK_DISPATCH_DIR}" &&

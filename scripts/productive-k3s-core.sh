@@ -19,7 +19,7 @@ usage() {
 Usage:
   ./productive-k3s-core.sh <command> [args...]
   ./productive-k3s-core.sh addon validate --tgz <file>
-  ./productive-k3s-core.sh addon install (--tgz <file> | <name>) [--public-host <fqdn>]
+  ./productive-k3s-core.sh addon install --tgz <file> [--public-host <fqdn>]
   ./productive-k3s-core.sh stack <install|export|validate|backup|cleanup> <name> [args...]
   ./productive-k3s-core.sh stack install --tgz <file> [args...]
   ./productive-k3s-core.sh stack export --tgz <file> --output <dir|archive>
@@ -51,7 +51,6 @@ Examples:
   ./productive-k3s-core.sh validate --strict
   ./productive-k3s-core.sh addon validate --tgz ./longhorn-addon.tgz
   ./productive-k3s-core.sh addon install --tgz ./nginx-addon.tgz --public-host nginx-01.k3s.lab.internal
-  ./productive-k3s-core.sh addon install nginx
 
 If no command is provided, or the first argument is an option, the wrapper
 defaults to `apply` for release-installer compatibility.
@@ -981,41 +980,6 @@ create_overlay_repo_for_stack_tgz() {
   printf '%s\n%s\n' "${overlay_root}" "${stack_name}"
 }
 
-create_overlay_repo_for_addon_name() {
-  local addon_name="$1"
-  local real_repo overlay_root stack_name
-  real_repo="$(resolve_addons_repo_dir)" || {
-    printf 'could not resolve productive-k3s-addons source repository. Set PRODUCTIVE_K3S_ADDONS_REPO_DIR.\n' >&2
-    return 4
-  }
-  resolve_addon_source_dir "${addon_name}" >/dev/null || {
-    printf 'addon source not found: %s\n' "${addon_name}" >&2
-    return 4
-  }
-
-  overlay_root="$(mktemp -d)"
-  stack_name="addon-${addon_name}"
-  mkdir -p "${overlay_root}/stacks/${stack_name}"
-  ln -s "${real_repo}/addons" "${overlay_root}/addons"
-  {
-    printf 'apiVersion: addons.productive-k3s.io/v1\n'
-    printf 'kind: Stack\n'
-    printf 'metadata:\n'
-    printf '  name: %s\n' "${stack_name}"
-    printf '  version: 0.1.0\n'
-    printf 'spec:\n'
-    printf '  addons:\n'
-    case "${addon_name}" in
-      rancher|registry)
-        printf '    - cert-manager\n'
-        ;;
-    esac
-    printf '    - %s\n' "${addon_name}"
-  } > "${overlay_root}/stacks/${stack_name}/stack.yaml"
-
-  printf '%s\n%s\n' "${overlay_root}" "${stack_name}"
-}
-
 run_stack_install_from_overlay() {
   local overlay_repo="$1"
   local stack_name="$2"
@@ -1115,7 +1079,6 @@ run_stack_export_from_tgz() {
 
 run_addon_install() {
   local tgz_path=""
-  local addon_name=""
   local public_host="${PK3S_ADDON_PUBLIC_HOST:-}"
   while (($# > 0)); do
     case "$1" in
@@ -1128,16 +1091,9 @@ run_addon_install() {
         shift 2
         ;;
       *)
-        if [[ -n "${addon_name}" ]]; then
-          printf 'Usage: ./productive-k3s-core.sh addon install (--tgz <file> | <name>) [--public-host <fqdn>]\n' >&2
-          return 2
-        fi
-        if [[ "$1" == -* ]]; then
-          break
-        fi
-        addon_name="$1"
-        shift
-        break
+        printf 'Usage: ./productive-k3s-core.sh addon install --tgz <file> [--public-host <fqdn>]\n' >&2
+        printf 'source-name addon install is no longer part of the public core contract; package the addon as .tgz first.\n' >&2
+        return 2
         ;;
     esac
   done
@@ -1147,23 +1103,10 @@ run_addon_install() {
     return $?
   fi
 
-  [[ -n "${addon_name}" ]] || {
-    printf 'Usage: ./productive-k3s-core.sh addon install (--tgz <file> | <name>) [--public-host <fqdn>]\n' >&2
+  [[ -n "${tgz_path}" ]] || {
+    printf 'Usage: ./productive-k3s-core.sh addon install --tgz <file> [--public-host <fqdn>]\n' >&2
     return 2
   }
-
-  local overlay_repo stack_name
-  mapfile -t _addon_overlay < <(create_overlay_repo_for_addon_name "${addon_name}") || return $?
-  overlay_repo="${_addon_overlay[0]:-}"
-  stack_name="${_addon_overlay[1]:-}"
-  [[ -n "${overlay_repo}" && -n "${stack_name}" ]] || {
-    printf 'failed to build a temporary stack overlay for addon install\n' >&2
-    return 4
-  }
-  local rc=0
-  run_stack_install_from_overlay "${overlay_repo}" "${stack_name}" "$@" || rc=$?
-  rm -rf "${overlay_repo}"
-  return "${rc}"
 }
 
 run_dev_addon_validate() {
