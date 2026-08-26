@@ -157,6 +157,12 @@ Contract summary:
 - `addon install --tgz <artifact>` runs on the local host against the local cluster
 - packaged add-ons can still request a basic public ingress via `--public-host`
 
+Important boundary:
+
+- named stack installation remains part of the public `core` contract
+- named public add-on installation does not
+- add-ons must be packaged first and then passed to `core` as `.tgz` artifacts
+
 Current exported-installer test coverage lives in [tests/README.md](./tests/README.md) and includes:
 
 - `k3s` on Ubuntu `24.04`
@@ -172,6 +178,11 @@ The exported installer contract is intentionally narrow:
 - it may still require host prerequisites and network access
   Typical examples are downloading `k3s` or `rke2`, resolving Helm charts and chart dependencies, and pulling container images.
 - it consumes packaged stack artifacts; catalog resolution belongs above `core`, not inside it
+
+The same separation applies to add-ons:
+
+- catalog naming and source curation belong in repositories such as `productive-k3s-addons`
+- public `core` add-on installation consumes packaged artifacts and does not resolve add-on source names directly
 
 Core's responsibility is intentionally narrow for add-on public exposure:
 
