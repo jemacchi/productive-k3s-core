@@ -755,6 +755,31 @@ run_stack_validate_with_retries() {
   done
 }
 
+run_stack_install_with_retries() {
+  local stack_name="$1"
+  local answers="$2"
+  local timeout_secs="${3:-1800}"
+  local sleep_secs="${4:-30}"
+  local extra_args="${5:-}"
+  local start_ts now_ts
+  start_ts=$(date +%s)
+
+  while true; do
+    if run_core_cli_with_answers "stack install" "${stack_name}${extra_args:+ ${extra_args}}" "${answers}"; then
+      return 0
+    fi
+
+    now_ts=$(date +%s)
+    if (( now_ts - start_ts >= timeout_secs )); then
+      err "Stack install for '${stack_name}' did not converge within ${timeout_secs}s"
+      return 1
+    fi
+
+    log "Stack install for '${stack_name}' is not clean yet; waiting ${sleep_secs}s before retrying"
+    sleep "$sleep_secs"
+  done
+}
+
 assert_in_vm() {
   local cmd="$1" description="$2"
   if run_vm_command_with_status \
@@ -897,7 +922,7 @@ run_full() {
     export PRODUCTIVE_K3S_AUTO_APPROVE_PREFLIGHT_WARNINGS=true
   fi
   run_core_cli_with_answers "apply" "" "$(core_answers)"
-  run_core_cli_with_answers "stack install" "base" "$(full_answers)"
+  run_stack_install_with_retries "base" "$(full_answers)" 1800 30
   if [[ -n "${previous_auto_approve}" ]]; then
     export PRODUCTIVE_K3S_AUTO_APPROVE_PREFLIGHT_WARNINGS="${previous_auto_approve}"
   else
