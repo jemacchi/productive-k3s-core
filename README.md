@@ -139,6 +139,14 @@ The versions pinned for the managed stack components live in [scripts/component-
 
 Telemetry consent is only relevant for mutating public CLI flows such as `apply` and `addon install`. Read-only commands like `help`, `bundle info --json`, and `bom --json` do not prompt for telemetry and do not emit command-level telemetry events.
 
+For local UI and automation integrations, the public CLI also supports an operation event stream:
+
+```bash
+./productive-k3s-core.sh --events ndjson addon validate --tgz ./nginx-addon.tgz >events.ndjson 2>human.log
+```
+
+This stream is local process output, not telemetry. With `--events ndjson`, stdout is reserved for newline-delimited JSON operation events and human-readable logs are written to stderr. Without `--events`, command output behaves as before.
+
 Practical CLI examples:
 
 ```bash
